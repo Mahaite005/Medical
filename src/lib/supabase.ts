@@ -21,6 +21,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Create Supabase client with validated environment variables
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// Updated: 2024 - Environment variables validation added
 export type Database = {
   public: {
     Tables: {
