@@ -4,7 +4,11 @@ const nextConfig = {
     appDir: true,
   },
   images: {
-    domains: ['ypcyvaacsjlathtejrxl.supabase.co'],
+    domains: [
+      'ypcyvaacsjlathtejrxl.supabase.co',
+      '*.supabase.co',
+      'supabase.co'
+    ],
   },
   // Security headers
   async headers() {
@@ -34,7 +38,10 @@ const nextConfig = {
   },
   // Environment variables validation
   env: {
-    CUSTOM_KEY: process.env.CUSTOM_KEY,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    GOOGLE_GEMINI_API_KEY: process.env.GOOGLE_GEMINI_API_KEY,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   },
 }
 
