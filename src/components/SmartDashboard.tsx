@@ -25,9 +25,11 @@ import {
   BarChart3,
   Target,
   Shield,
-  Plus
+  Plus,
+  HardDrive
 } from 'lucide-react'
 import ManualHealthInput from './ManualHealthInput'
+import StorageMonitor from './StorageMonitor'
 
 interface SmartDashboardProps {
   user: User
@@ -586,6 +588,9 @@ export default function SmartDashboard({ user, profile }: SmartDashboardProps) {
           </div>
         ) : null}
       </div>
+
+      {/* مراقبة مساحة التخزين */}
+      <StorageMonitor />
 
       {/* النصائح الطبية */}
       <div className="bg-white rounded-2xl p-6 shadow-sm">
