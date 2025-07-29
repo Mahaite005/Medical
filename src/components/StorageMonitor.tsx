@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { HardDrive, AlertTriangle, CheckCircle } from 'lucide-react'
+import { HardDrive, AlertTriangle, CheckCircle, Trash2, Clock } from 'lucide-react'
 
 interface StorageUsage {
   used: {
@@ -29,13 +29,33 @@ interface StorageResponse {
   }
 }
 
+interface CleanupStats {
+  totalFiles: number
+  totalSize: number
+  oldFiles: number
+  oldFilesSize: number
+  willBeDeleted: boolean
+}
+
+interface CleanupResponse {
+  stats: CleanupStats
+  info: {
+    retentionPeriod: string
+    nextCleanup: string
+    description: string
+  }
+}
+
 export default function StorageMonitor() {
   const [storageData, setStorageData] = useState<StorageResponse | null>(null)
+  const [cleanupData, setCleanupData] = useState<CleanupResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [cleanupLoading, setCleanupLoading] = useState(false)
 
   useEffect(() => {
     fetchStorageUsage()
+    fetchCleanupStats()
   }, [])
 
   const fetchStorageUsage = async () => {
@@ -55,6 +75,43 @@ export default function StorageMonitor() {
       setError('حدث خطأ في الاتصال')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchCleanupStats = async () => {
+    try {
+      const response = await fetch('/api/cleanup')
+      const data = await response.json()
+      
+      if (response.ok) {
+        setCleanupData(data)
+      }
+    } catch (error) {
+      console.error('Error fetching cleanup stats:', error)
+    }
+  }
+
+  const handleManualCleanup = async () => {
+    try {
+      setCleanupLoading(true)
+      
+      const response = await fetch('/api/cleanup', {
+        method: 'POST'
+      })
+      const data = await response.json()
+      
+      if (response.ok) {
+        // إعادة تحميل البيانات
+        await fetchStorageUsage()
+        await fetchCleanupStats()
+        alert('تم التنظيف بنجاح!')
+      } else {
+        alert('فشل في التنظيف: ' + (data.error || 'خطأ غير معروف'))
+      }
+    } catch (error) {
+      alert('حدث خطأ في الاتصال')
+    } finally {
+      setCleanupLoading(false)
     }
   }
 
@@ -170,6 +227,41 @@ export default function StorageMonitor() {
               }
             </span>
           </div>
+        </div>
+      )}
+
+      {/* التنظيف التلقائي */}
+      {cleanupData && (
+        <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-orange-600" />
+              <span className="font-medium text-orange-800">التنظيف التلقائي</span>
+            </div>
+            {cleanupData.stats.willBeDeleted && (
+              <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+                {cleanupData.stats.oldFiles} ملف قديم
+              </span>
+            )}
+          </div>
+          <div className="text-sm text-orange-700 mb-3">
+            <p>سيتم حذف الملفات التي يزيد عمرها عن {cleanupData.info.retentionPeriod} تلقائياً</p>
+            <p className="text-xs mt-1">التنظيف التالي: {cleanupData.info.nextCleanup}</p>
+          </div>
+          {cleanupData.stats.willBeDeleted && (
+            <button
+              onClick={handleManualCleanup}
+              disabled={cleanupLoading}
+              className="flex items-center gap-2 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 text-sm"
+            >
+              {cleanupLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              تنظيف يدوي الآن
+            </button>
+          )}
         </div>
       )}
 

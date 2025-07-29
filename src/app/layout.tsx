@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { scheduleAutoCleanup } from '@/lib/autoCleanup'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,6 +18,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // تفعيل التنظيف التلقائي (فقط في الخادم)
+  if (typeof window === 'undefined') {
+    scheduleAutoCleanup()
+  }
+  
   return (
     <html lang="ar" dir="rtl">
       <head>
