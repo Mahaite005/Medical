@@ -22,6 +22,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Updated: 2024 - Environment variables validation added
+// Database fix: Added proper policies and tables support
 export type Database = {
   public: {
     Tables: {
