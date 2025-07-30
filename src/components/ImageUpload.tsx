@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import { User } from '@supabase/supabase-js'
 import { Camera, Upload, X, Loader2, FileText } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { GEMINI_CONFIG, isValidFileType } from '@/lib/geminiConfig'
+import { GEMINI_CONFIG, isValidFileType, isValidFileSize } from '@/lib/geminiConfig'
 
 interface ImageUploadProps {
   user: User
@@ -29,11 +29,12 @@ export default function ImageUpload({ user }: ImageUploadProps) {
       }
     }
 
-    // Check file size
-    if (file.size > GEMINI_CONFIG.RATE_LIMIT.MAX_FILE_SIZE) {
+    // Check file size using the new function
+    if (!isValidFileSize(file.size, file.type)) {
+      const maxSizeMB = file.type === 'application/pdf' ? 5 : 10;
       return { 
         isValid: false, 
-        error: GEMINI_CONFIG.ERROR_MESSAGES.FILE_TOO_LARGE
+        error: `حجم الملف كبير جداً. الحد الأقصى ${maxSizeMB} ميجابايت. يرجى اختيار ملف أصغر.`
       }
     }
 
@@ -180,6 +181,12 @@ export default function ImageUpload({ user }: ImageUploadProps) {
           errorMessage = errorData.error || errorMessage
         } catch (e) {
           console.error('Failed to parse error response:', e)
+          // Handle specific status codes
+          if (response.status === 504) {
+            errorMessage = selectedFileType === 'application/pdf' 
+              ? GEMINI_CONFIG.ERROR_MESSAGES.PDF_TIMEOUT
+              : 'انتهت مهلة التحليل. يرجى المحاولة مرة أخرى.'
+          }
         }
         throw new Error(errorMessage)
       }
@@ -212,7 +219,13 @@ export default function ImageUpload({ user }: ImageUploadProps) {
       setResult(analysis.result)
     } catch (error: any) {
       console.error('Analysis error:', error)
-      const errorMessage = error.message || 'حدث خطأ أثناء التحليل. حاول مرة أخرى لاحقاً.'
+      let errorMessage = error.message || 'حدث خطأ أثناء التحليل. حاول مرة أخرى لاحقاً.'
+      
+      // Provide more specific error messages for PDF files
+      if (selectedFileType === 'application/pdf' && errorMessage.includes('مهلة')) {
+        errorMessage = 'انتهت مهلة تحليل ملف PDF. الملف كبير جداً أو يحتوي على صفحات كثيرة. يرجى اختيار ملف أصغر أو تقليل عدد الصفحات.'
+      }
+      
       setError(errorMessage)
     } finally {
       setAnalyzing(false)
@@ -284,15 +297,16 @@ export default function ImageUpload({ user }: ImageUploadProps) {
 
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
             <h3 className="font-semibold text-blue-900 mb-2">نصائح لأفضل النتائج:</h3>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• تأكد من وضوح الصورة وعدم وجود ضبابية</li>
-              <li>• تأكد من وجود إضاءة جيدة</li>
-              <li>• احرص على ظهور جميع النتائج في الصورة</li>
-              <li>• تجنب الظلال على الورقة</li>
-              <li>• حجم الملف يجب أن يكون أقل من 10 ميجابايت</li>
-              <li>• الصيغ المدعومة: JPG, PNG, WebP, PDF</li>
-              <li>• ملفات PDF يجب أن تحتوي على صور واضحة للنتائج</li>
-            </ul>
+                         <ul className="text-sm text-blue-800 space-y-1">
+               <li>• تأكد من وضوح الصورة وعدم وجود ضبابية</li>
+               <li>• تأكد من وجود إضاءة جيدة</li>
+               <li>• احرص على ظهور جميع النتائج في الصورة</li>
+               <li>• تجنب الظلال على الورقة</li>
+               <li>• حجم الملف: الصور أقل من 10 ميجابايت، PDF أقل من 5 ميجابايت</li>
+               <li>• الصيغ المدعومة: JPG, PNG, WebP, PDF</li>
+               <li>• ملفات PDF: يفضل أن تحتوي على أقل من 10 صفحات للتحليل الأسرع</li>
+               <li>• تأكد من أن ملفات PDF تحتوي على صور واضحة للنتائج</li>
+             </ul>
           </div>
         </div>
       )}
@@ -323,9 +337,9 @@ export default function ImageUpload({ user }: ImageUploadProps) {
                 <FileText className="w-5 h-5 text-yellow-600" />
                 <span className="font-medium text-yellow-800">ملف PDF</span>
               </div>
-              <p className="text-sm text-yellow-700">
-                سيتم تحليل جميع الصور الموجودة في ملف PDF. تأكد من أن الصور واضحة ويمكن قراءتها.
-              </p>
+                           <p className="text-sm text-yellow-700">
+               سيتم تحليل جميع الصور الموجودة في ملف PDF. تأكد من أن الصور واضحة ويمكن قراءتها. يفضل أن يحتوي الملف على أقل من 10 صفحات للتحليل الأسرع.
+             </p>
             </div>
           ) : (
             <div className="camera-container mb-6">
@@ -350,12 +364,12 @@ export default function ImageUpload({ user }: ImageUploadProps) {
             <div className="text-center py-8">
               <Loader2 className="w-8 h-8 animate-spin text-primary-600 mx-auto mb-4" />
               <p className="text-gray-600">جاري تحليل الملف...</p>
-              <p className="text-sm text-gray-500 mt-2">
-                {selectedFileType === 'application/pdf' 
-                  ? 'قد يستغرق تحليل ملف PDF وقتاً أطول'
-                  : 'قد يستغرق هذا 10-30 ثانية'
-                }
-              </p>
+                           <p className="text-sm text-gray-500 mt-2">
+               {selectedFileType === 'application/pdf' 
+                 ? 'قد يستغرق تحليل ملف PDF وقتاً أطول (حتى دقيقة واحدة)'
+                 : 'قد يستغرق هذا 10-30 ثانية'
+               }
+             </p>
             </div>
           )}
 

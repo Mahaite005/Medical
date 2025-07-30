@@ -86,12 +86,13 @@ export async function POST(request: NextRequest) {
 
     // Validate file size on server side
     const fileSizeInBytes = Math.ceil((imageBase64.length * 3) / 4)
-    const maxSizeInBytes = 10 * 1024 * 1024 // 10MB (increased for PDF)
+    const maxSizeInBytes = fileType === 'application/pdf' ? 5 * 1024 * 1024 : 10 * 1024 * 1024 // 5MB for PDF, 10MB for images
     
     if (fileSizeInBytes > maxSizeInBytes) {
       console.log('File too large:', fileSizeInBytes, 'bytes');
+      const maxSizeMB = fileType === 'application/pdf' ? 5 : 10;
       return NextResponse.json(
-        { error: 'حجم الملف كبير جداً. الحد الأقصى 10 ميجابايت. يرجى اختيار ملف أصغر.' },
+        { error: `حجم الملف كبير جداً. الحد الأقصى ${maxSizeMB} ميجابايت. يرجى اختيار ملف أصغر.` },
         { status: 400 }
       )
     }
@@ -112,11 +113,18 @@ export async function POST(request: NextRequest) {
     // Determine MIME type based on file type
     const mimeType = fileType === 'application/pdf' ? 'application/pdf' : 'image/jpeg'
     
+    // Set timeout for PDF files to be longer
+    const timeout = fileType === 'application/pdf' ? 60000 : 30000; // 60s for PDF, 30s for images
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      signal: controller.signal,
       body: JSON.stringify({
         contents: [
           {
@@ -190,6 +198,8 @@ ${fileType === 'application/pdf' ? 'إذا كان الملف يحتوي على �
         errorMessage = 'غير مسموح بالوصول إلى خدمة التحليل'
       } else if (response.status === 429) {
         errorMessage = 'تم تجاوز حد الاستخدام. يرجى المحاولة لاحقاً'
+      } else if (response.status === 504) {
+        errorMessage = 'انتهت مهلة التحليل. الملف كبير جداً أو يحتوي على صفحات كثيرة. يرجى اختيار ملف أصغر أو تقليل عدد الصفحات.'
       } else if (response.status >= 500) {
         errorMessage = 'خطأ في الخادم. يرجى المحاولة لاحقاً'
       }
@@ -199,6 +209,9 @@ ${fileType === 'application/pdf' ? 'إذا كان الملف يحتوي على �
 
     const data = await response.json()
     console.log('Analysis completed successfully');
+    
+    // Clear timeout since request completed successfully
+    clearTimeout(timeoutId);
 
     const result = data.candidates?.[0]?.content?.parts?.[0]?.text || 'لم يتمكن من تحليل الملف';
 
@@ -210,12 +223,25 @@ ${fileType === 'application/pdf' ? 'إذا كان الملف يحتوي على �
   } catch (error: any) {
     console.error('Analysis error:', error);
     
+    // Clear timeout if it exists
+    if (typeof timeoutId !== 'undefined') {
+      clearTimeout(timeoutId);
+    }
+    
     // Log more details about the error
     if (error.message) {
       console.error('Error message:', error.message);
     }
     if (error.stack) {
       console.error('Error stack:', error.stack);
+    }
+    
+    // Handle timeout errors specifically
+    if (error.name === 'AbortError') {
+      return NextResponse.json(
+        { error: 'انتهت مهلة التحليل. الملف كبير جداً أو يحتوي على صفحات كثيرة. يرجى اختيار ملف أصغر أو تقليل عدد الصفحات.' },
+        { status: 504 }
+      )
     }
     
     return NextResponse.json(

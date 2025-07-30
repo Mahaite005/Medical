@@ -3,6 +3,7 @@ const nextConfig = {
   experimental: {
     appDir: true,
   },
+
   images: {
     domains: [
       'ypcyvaacsjlathtejrxl.supabase.co',
@@ -34,8 +35,18 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'X-Response-Time',
+            value: '60s',
+          },
+        ],
+      },
     ]
   },
+
   // Environment variables validation
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
