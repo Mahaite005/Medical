@@ -174,8 +174,14 @@ export default function ImageUpload({ user }: ImageUploadProps) {
       console.log('Analysis API response status:', response.status)
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'فشل في تحليل الملف')
+        let errorMessage = 'فشل في تحليل الملف'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch (e) {
+          console.error('Failed to parse error response:', e)
+        }
+        throw new Error(errorMessage)
       }
 
       const analysis = await response.json()
@@ -206,7 +212,8 @@ export default function ImageUpload({ user }: ImageUploadProps) {
       setResult(analysis.result)
     } catch (error: any) {
       console.error('Analysis error:', error)
-      setError('حدث خطأ أثناء التحليل. حاول مرة أخرى لاحقاً.')
+      const errorMessage = error.message || 'حدث خطأ أثناء التحليل. حاول مرة أخرى لاحقاً.'
+      setError(errorMessage)
     } finally {
       setAnalyzing(false)
     }
@@ -354,13 +361,31 @@ export default function ImageUpload({ user }: ImageUploadProps) {
 
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-600 mb-3">{error}</p>
-              <button
-                onClick={analyzeFile}
-                className="w-full bg-red-600 text-white py-2 rounded-lg text-sm hover:bg-red-700 transition-colors"
-              >
-                إعادة المحاولة
-              </button>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                    <span className="text-red-600 text-sm font-bold">!</span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-red-900 mb-2">خطأ في التحليل</h4>
+                  <p className="text-red-700 mb-4 text-sm leading-relaxed">{error}</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={analyzeFile}
+                      className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-red-700 transition-colors"
+                    >
+                      إعادة المحاولة
+                    </button>
+                    <button
+                      onClick={resetUpload}
+                      className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-gray-700 transition-colors"
+                    >
+                      اختيار ملف جديد
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

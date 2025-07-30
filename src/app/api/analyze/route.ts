@@ -12,14 +12,17 @@ function checkRateLimit(ip: string): boolean {
   const record = rateLimitStore.get(ip)
   if (!record || now > record.resetTime) {
     rateLimitStore.set(ip, { count: 1, resetTime: now + windowMs })
+    console.log('Rate limit: New record for IP:', ip)
     return true
   }
 
   if (record.count >= maxRequests) {
+    console.log('Rate limit: Exceeded for IP:', ip, 'Count:', record.count)
     return false
   }
 
   record.count++
+  console.log('Rate limit: Incremented for IP:', ip, 'Count:', record.count)
   return true
 }
 
@@ -28,12 +31,16 @@ function validateCSRFToken(request: NextRequest): boolean {
   const origin = request.headers.get('origin')
   const referer = request.headers.get('referer')
   
+  console.log('Validating CSRF - Origin:', origin, 'Referer:', referer)
+  
   // In production, implement proper CSRF token validation
   // For now, basic origin check
-  if (origin && !origin.includes('localhost') && !origin.includes('your-domain.com')) {
+  if (origin && !origin.includes('localhost') && !origin.includes('medicalapp-teal.vercel.app') && !origin.includes('vercel.app')) {
+    console.log('CSRF validation failed - Origin not allowed:', origin)
     return false
   }
   
+  console.log('CSRF validation passed')
   return true
 }
 
@@ -41,9 +48,15 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Analyze API called');
     
+    // Log request details for debugging
+    console.log('Request origin:', request.headers.get('origin'));
+    console.log('Request referer:', request.headers.get('referer'));
+    console.log('Request IP:', request.ip || request.headers.get('x-forwarded-for'));
+    
     // Rate limiting
     const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
     if (!checkRateLimit(ip)) {
+      console.log('Rate limit exceeded for IP:', ip);
       return NextResponse.json(
         { error: 'تم تجاوز الحد الأقصى للطلبات. يرجى المحاولة لاحقاً.' },
         { status: 429 }
@@ -52,6 +65,7 @@ export async function POST(request: NextRequest) {
 
     // CSRF protection
     if (!validateCSRFToken(request)) {
+      console.log('CSRF validation failed');
       return NextResponse.json(
         { error: 'طلب غير صالح' },
         { status: 403 }
@@ -65,7 +79,7 @@ export async function POST(request: NextRequest) {
     if (!imageBase64) {
       console.log('No file provided');
       return NextResponse.json(
-        { error: 'لم يتم إرسال ملف' },
+        { error: 'لم يتم إرسال ملف. يرجى اختيار ملف صحيح.' },
         { status: 400 }
       )
     }
@@ -75,8 +89,9 @@ export async function POST(request: NextRequest) {
     const maxSizeInBytes = 10 * 1024 * 1024 // 10MB (increased for PDF)
     
     if (fileSizeInBytes > maxSizeInBytes) {
+      console.log('File too large:', fileSizeInBytes, 'bytes');
       return NextResponse.json(
-        { error: 'حجم الملف كبير جداً. الحد الأقصى 10 ميجابايت.' },
+        { error: 'حجم الملف كبير جداً. الحد الأقصى 10 ميجابايت. يرجى اختيار ملف أصغر.' },
         { status: 400 }
       )
     }
@@ -87,7 +102,7 @@ export async function POST(request: NextRequest) {
     if (!GOOGLE_GEMINI_API_KEY) {
       console.log('No Google Gemini API key found');
       return NextResponse.json(
-        { error: 'مفتاح Google Gemini API غير متوفر' },
+        { error: 'مفتاح Google Gemini API غير متوفر. يرجى التحقق من إعدادات الخادم.' },
         { status: 500 }
       )
     }
@@ -164,7 +179,22 @@ ${fileType === 'application/pdf' ? 'إذا كان الملف يحتوي على �
     if (!response.ok) {
       const errorText = await response.text();
       console.log('Google Gemini error:', errorText);
-      throw new Error(`Google Gemini API error: ${response.status} - ${errorText}`)
+      
+      // Provide more specific error messages based on status code
+      let errorMessage = 'حدث خطأ أثناء تحليل الملف'
+      if (response.status === 400) {
+        errorMessage = 'الملف غير صالح أو غير مدعوم'
+      } else if (response.status === 401) {
+        errorMessage = 'مفتاح API غير صالح'
+      } else if (response.status === 403) {
+        errorMessage = 'غير مسموح بالوصول إلى خدمة التحليل'
+      } else if (response.status === 429) {
+        errorMessage = 'تم تجاوز حد الاستخدام. يرجى المحاولة لاحقاً'
+      } else if (response.status >= 500) {
+        errorMessage = 'خطأ في الخادم. يرجى المحاولة لاحقاً'
+      }
+      
+      throw new Error(errorMessage)
     }
 
     const data = await response.json()
@@ -179,6 +209,14 @@ ${fileType === 'application/pdf' ? 'إذا كان الملف يحتوي على �
 
   } catch (error: any) {
     console.error('Analysis error:', error);
+    
+    // Log more details about the error
+    if (error.message) {
+      console.error('Error message:', error.message);
+    }
+    if (error.stack) {
+      console.error('Error stack:', error.stack);
+    }
     
     return NextResponse.json(
       { error: 'حدث خطأ أثناء التحليل. حاول مرة أخرى لاحقاً.' },
