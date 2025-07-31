@@ -175,8 +175,21 @@ export default function AuthComponent() {
           return
         }
 
-        // إرسال رابط إعادة تعيين كلمة المرور عبر البريد الإلكتروني فقط
-        await sendResetPasswordEmail(resetEmail)
+        // إرسال رابط إعادة تعيين كلمة المرور عبر API المخصص
+        const response = await fetch('/api/password-reset', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: resetEmail })
+        })
+
+        const result = await response.json()
+
+        if (!response.ok) {
+          throw new Error(result.error || 'فشل في إرسال رابط إعادة تعيين كلمة المرور')
+        }
+
         setSuccessMessage('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد (والبريد المزعج) واتباع الرابط المرفق.')
         setLoading(false)
         return

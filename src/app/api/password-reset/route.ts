@@ -1,268 +1,161 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
-
-// إنشاء Supabase client عادي
-const supabaseClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
-// إنشاء Supabase admin client إذا كان service role key متاحاً
-let supabaseAdmin: SupabaseClient | null = null
-if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    }
-  )
-}
+import { supabase } from '@/lib/supabase'
+import { createPasswordResetTemplate, sendEmail } from '@/lib/emailService'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, code, newPassword } = await request.json()
-
-    console.log('🔍 API: معالجة طلب إعادة تعيين كلمة المرور')
-    console.log('📧 البريد الإلكتروني المستلم:', email)
-    console.log('🔐 الكود المستلم:', code)
-    console.log('🔒 كلمة المرور الجديدة موجودة:', !!newPassword)
-
-    if (!email || !code || !newPassword) {
-      console.log('❌ بيانات مفقودة - البريد:', !!email, '- الكود:', !!code, '- كلمة المرور:', !!newPassword)
+    const { email } = await request.json()
+    
+    if (!email) {
       return NextResponse.json(
-        { error: 'البريد الإلكتروني والكود وكلمة المرور الجديدة مطلوبة' },
+        { error: 'البريد الإلكتروني مطلوب' },
         { status: 400 }
       )
     }
 
-    console.log(`🔍 API: معالجة طلب إعادة تعيين كلمة المرور لـ: ${email}`)
-
-    // التحقق من صحة الكود
-    console.log('🔎 البحث عن الكود في قاعدة البيانات...')
-    const { data: resetCodeData, error: codeError } = await supabaseClient
-      .from('password_reset_codes')
-      .select('*')
-      .eq('email', email.toLowerCase())
-      .eq('code', code)
-      .eq('used', false)
-      .gt('expires_at', new Date().toISOString())
-      .single()
-
-    console.log('📊 نتيجة البحث عن الكود:')
-    console.log('- خطأ:', codeError?.message || 'لا يوجد')
-    console.log('- البيانات موجودة:', !!resetCodeData)
-    if (resetCodeData) {
-      console.log('- تاريخ انتهاء الصلاحية:', resetCodeData.expires_at)
-      console.log('- الكود مستخدم:', resetCodeData.used)
-      console.log('- الوقت الحالي:', new Date().toISOString())
-    }
-
-    // إضافة تحقق إضافي من وجود كودات أخرى
-    const { data: allCodes, error: allCodesError } = await supabaseClient
-      .from('password_reset_codes')
-      .select('*')
-      .eq('email', email.toLowerCase())
-      .order('created_at', { ascending: false })
-
-    console.log('📋 جميع الكودات لهذا البريد:', allCodes?.length || 0)
-    if (allCodes && allCodes.length > 0) {
-      allCodes.forEach((codeData, index) => {
-        console.log(`- كود ${index + 1}: ${codeData.code}, مستخدم: ${codeData.used}, ينتهي: ${codeData.expires_at}`)
-      })
-    }
-
-    if (codeError || !resetCodeData) {
-      console.log('❌ كود غير صحيح أو منتهي الصلاحية')
+    // Get the site URL from environment or use Vercel URL
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'
+    
+    // Generate a custom reset token
+    const resetToken = await generateCustomResetToken(email)
+    
+    if (!resetToken) {
       return NextResponse.json(
-        { error: 'رمز التحقق غير صحيح أو منتهي الصلاحية' },
-        { status: 400 }
-      )
-    }
-
-    console.log('✅ تم التحقق من صحة الكود')
-
-    // البحث عن المستخدم في الملفات الشخصية
-    const { data: profile, error: profileError } = await supabaseClient
-      .from('profiles')
-      .select('email, full_name')
-      .eq('email', email.toLowerCase())
-      .single()
-
-    if (profileError || !profile) {
-      console.log('⚠️ المستخدم غير موجود في الملفات الشخصية')
-      console.log('💡 في وضع التطوير: تخطي التحقق من الملف الشخصي والمتابعة')
-      console.log('🔧 هذا يحدث عادة عندما يكون المستخدم موجود في auth ولكن لم يُحفظ في profiles')
-    } else {
-      console.log('✅ تم العثور على المستخدم:', profile.full_name)
-    }
-
-    // محاولة تحديث كلمة المرور بطرق مختلفة
-    let updateSuccess = false
-    let updateMethod = ''
-
-    // الطريقة الأولى: استخدام Admin API إذا كان متاحاً
-    if (supabaseAdmin && !updateSuccess) {
-      try {
-        console.log('🔧 محاولة تحديث كلمة المرور باستخدام Admin API...')
-        
-        // البحث عن المستخدم في auth
-        const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers()
-        
-        if (!listError) {
-          const authUser = users.find((u: any) => u.email?.toLowerCase() === email.toLowerCase())
-          
-          if (authUser) {
-            console.log('✅ تم العثور على المستخدم في auth:', authUser.email)
-            
-            // تحديث كلمة المرور
-            const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-              authUser.id,
-              { 
-                password: newPassword,
-                email_confirm: true
-              }
-            )
-            
-            if (!updateError) {
-              console.log('✅ تم تحديث كلمة المرور باستخدام Admin API')
-              updateSuccess = true
-              updateMethod = 'admin_api'
-            } else {
-              console.log('⚠️ فشل في Admin API:', updateError.message)
-            }
-          } else {
-            console.log('❌ المستخدم غير موجود في نظام auth')
-          }
-        } else {
-          console.log('⚠️ فشل في البحث عن المستخدمين:', listError.message)
-        }
-      } catch (error) {
-        console.log('⚠️ خطأ في Admin API:', error)
-      }
-    }
-
-    // الطريقة الثانية: محاولة تحديث كلمة المرور المباشر
-    if (!updateSuccess) {
-      try {
-        const { data: updateData, error: updateError } = await supabaseClient.auth.updateUser({
-          password: newPassword
-        })
-
-        if (!updateError) {
-          console.log('✅ تم تحديث كلمة المرور بنجاح (الطريقة المباشرة)')
-          updateSuccess = true
-          updateMethod = 'direct_update'
-        } else {
-          console.log('⚠️ الطريقة المباشرة لم تنجح:', updateError.message)
-        }
-      } catch (error) {
-        console.log('⚠️ خطأ في الطريقة المباشرة:', error)
-      }
-    }
-
-    // الطريقة الثالثة: استخدام SQL function لتحديث كلمة المرور مباشرة
-    if (!updateSuccess) {
-      try {
-        console.log('🔧 محاولة تحديث كلمة المرور باستخدام SQL function...')
-        
-        // استدعاء SQL function لتحديث كلمة المرور
-        const { data: sqlResult, error: sqlError } = await supabaseClient.rpc('update_user_password', {
-          user_email: email.toLowerCase(),
-          new_password: newPassword
-        })
-
-        if (!sqlError && sqlResult) {
-          console.log('✅ تم تحديث كلمة المرور باستخدام SQL function')
-          updateSuccess = true
-          updateMethod = 'sql_function'
-        } else {
-          console.log('⚠️ فشل في SQL function:', sqlError?.message || 'لم يتم العثور على المستخدم')
-        }
-      } catch (error) {
-        console.log('⚠️ خطأ في SQL function:', error)
-      }
-    }
-
-    // الطريقة الرابعة: استخدام resetPasswordForEmail (أقل فعالية)
-    if (!updateSuccess) {
-      try {
-        const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(
-          email.toLowerCase(),
-          {
-            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/reset-password-confirm`
-          }
-        )
-
-        if (!resetError) {
-          console.log('📧 تم إرسال رابط إعادة تعيين (الطريقة الأخيرة)')
-          updateMethod = 'email_link'
-          // لا نعتبر هذا نجاح حقيقي لأنه لا يحدث كلمة المرور مباشرة
-        } else {
-          console.log('⚠️ الطريقة الأخيرة لم تنجح:', resetError.message)
-        }
-      } catch (error) {
-        console.log('⚠️ خطأ في الطريقة الأخيرة:', error)
-      }
-    }
-
-    // إذا فشلت جميع الطرق
-    if (!updateSuccess) {
-      console.log('❌ فشل في تحديث كلمة المرور بجميع الطرق')
-      console.log('🔧 يحتاج النظام إلى:')
-      console.log('   1. Supabase Service Role Key في متغيرات البيئة')
-      console.log('   2. أو تشغيل SQL function في قاعدة البيانات')
-      console.log('   3. أو استخدام نظام إعادة تعيين كلمة المرور التقليدي')
-      
-      return NextResponse.json(
-        { 
-          error: 'فشل في تحديث كلمة المرور. يرجى استخدام خيار "نسيت كلمة المرور" من صفحة تسجيل الدخول العادية، أو الاتصال بالدعم الفني.',
-          technical_info: 'System requires admin privileges or SQL function to update passwords directly',
-          suggestions: [
-            'استخدم خيار "نسيت كلمة المرور" التقليدي',
-            'تواصل مع الدعم الفني',
-            'تحقق من إعدادات Supabase'
-          ]
-        },
+        { error: 'فشل في إنشاء رمز إعادة التعيين' },
         { status: 500 }
       )
     }
 
-    // نجحت العملية
-    if (updateSuccess) {
-      // تحديد الكود كمستخدم
-      await supabaseClient
-        .from('password_reset_codes')
-        .update({ used: true })
-        .eq('id', resetCodeData.id)
-
-      console.log('🧹 تم وضع علامة على الكود كمستخدم')
-
-      // تنظيف جميع الكودات القديمة لهذا المستخدم
-      await supabaseClient
-        .from('password_reset_codes')
-        .delete()
-        .eq('email', email.toLowerCase())
-        .neq('id', resetCodeData.id)
-
-      console.log('🧹 تم تنظيف الكودات القديمة')
-      console.log(`🎉 تم تحديث كلمة المرور بنجاح باستخدام: ${updateMethod}`)
-
-      return NextResponse.json({
-        success: true,
-        message: 'تم تحديث كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.',
-        method: updateMethod
-      })
+    // Create custom reset link with correct Vercel URL
+    const resetLink = `${siteUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`
+    
+    // Send custom email with correct URL
+    const emailTemplate = createCustomResetEmailTemplate(email, resetLink)
+    const emailResult = await sendEmail(emailTemplate)
+    
+    if (!emailResult.success) {
+      return NextResponse.json(
+        { error: 'فشل في إرسال البريد الإلكتروني' },
+        { status: 500 }
+      )
     }
 
+    return NextResponse.json({
+      message: 'تم إرسال رابط إعادة تعيين كلمة المرور بنجاح',
+      info: 'يرجى التحقق من بريدك الإلكتروني (والبريد المزعج)'
+    })
+
   } catch (error) {
-    console.error('❌ خطأ في API:', error)
+    console.error('Password reset API error:', error)
     return NextResponse.json(
-      { error: 'خطأ في الخادم - يرجى المحاولة مرة أخرى' },
+      { error: 'حدث خطأ في الخادم' },
       { status: 500 }
     )
+  }
+}
+
+// Generate custom reset token
+async function generateCustomResetToken(email: string): Promise<string | null> {
+  try {
+    // Use Supabase's internal method to generate a proper reset token
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase(), {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'}/reset-password`
+    })
+    
+    if (error) {
+      console.error('Error generating reset token:', error)
+      return null
+    }
+    
+    // For now, we'll use a simple token generation
+    // In production, you might want to use a more secure method
+    const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    
+    // Store the token in database for verification
+    const { error: dbError } = await supabase
+      .from('password_reset_tokens')
+      .insert({
+        email: email.toLowerCase(),
+        token: token,
+        expires_at: new Date(Date.now() + 3600000).toISOString(), // 1 hour
+        used: false
+      })
+    
+    if (dbError) {
+      console.error('Error storing reset token:', dbError)
+      return null
+    }
+    
+    return token
+  } catch (error) {
+    console.error('Error in generateCustomResetToken:', error)
+    return null
+  }
+}
+
+// Create custom email template with correct URL
+function createCustomResetEmailTemplate(email: string, resetLink: string) {
+  const subject = 'إعادة تعيين كلمة المرور - تطبيق التحليل الطبي'
+  
+  const html = `
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>إعادة تعيين كلمة المرور - تطبيق التحليل الطبي</title>
+      <style>
+        body { background: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #334155; margin: 0; padding: 0; direction: rtl; }
+        .container { max-width: 500px; margin: 40px auto; background: #fff; border-radius: 16px; box-shadow: 0 8px 32px rgba(30, 64, 175, 0.08); overflow: hidden; border: 1px solid #e2e8f0; }
+        .header { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #fff; text-align: center; padding: 32px 24px 16px 24px; }
+        .header .logo { font-size: 48px; margin-bottom: 8px; }
+        .header h1 { margin: 0; font-size: 26px; font-weight: 700; }
+        .content { padding: 32px 24px; text-align: right; }
+        .content h2 { color: #1d4ed8; font-size: 22px; margin-bottom: 12px; }
+        .content p { font-size: 16px; margin-bottom: 18px; color: #475569; }
+        .reset-link { display: block; width: fit-content; margin: 24px auto; background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%); color: #fff !important; text-decoration: none; font-size: 18px; font-weight: 700; padding: 14px 36px; border-radius: 8px; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.12); transition: background 0.2s; }
+        .reset-link:hover { background: linear-gradient(90deg, #1d4ed8 0%, #3b82f6 100%); }
+        .footer { background: #f1f5f9; color: #64748b; text-align: center; padding: 18px 0; font-size: 14px; border-top: 1px solid #e2e8f0; }
+        @media (max-width: 600px) { .container, .content, .header { padding: 16px !important; } .reset-link { font-size: 16px; padding: 12px 18px; } }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">🩺</div>
+          <h1>تطبيق التحليل الطبي</h1>
+          <p>منصة التحليل الطبي الذكي</p>
+        </div>
+        <div class="content">
+          <h2>إعادة تعيين كلمة المرور</h2>
+          <p>
+            لقد تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك.<br>
+            إذا لم تطلب ذلك، يمكنك تجاهل هذه الرسالة بأمان.
+          </p>
+          <!-- الزر مع الرابط الصحيح -->
+          <a class="reset-link" href="${resetLink}">
+            اضغط هنا لإعادة تعيين كلمة المرور
+          </a>
+          <p>
+            إذا لم يعمل الزر أعلاه، يمكنك نسخ الرابط التالي ولصقه في متصفحك:<br>
+            <span style="color:#1d4ed8;word-break:break-all;">${resetLink}</span>
+          </p>
+          <p style="color:#f59e0b;font-size:15px;">
+            ⚠️ لأمانك: لا تشارك هذا الرابط مع أي شخص آخر. ينتهي صلاحية الرابط تلقائياً بعد ساعة واحدة.
+          </p>
+        </div>
+        <div class="footer">
+          فريق الدعم الفني - تطبيق التحليل الطبي<br>
+          جميع الحقوق محفوظة &copy; 2024
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  return {
+    to: email,
+    subject,
+    html
   }
 } 

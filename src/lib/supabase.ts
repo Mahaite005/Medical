@@ -81,6 +81,32 @@ export type Database = {
           test_type?: string | null
         }
       }
+      password_reset_tokens: {
+        Row: {
+          id: string
+          email: string
+          token: string
+          expires_at: string
+          used: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          token: string
+          expires_at: string
+          used?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          token?: string
+          expires_at?: string
+          used?: boolean
+          created_at?: string
+        }
+      }
     }
   }
 } 
