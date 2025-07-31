@@ -12,10 +12,29 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [showEditProfile, setShowEditProfile] = useState(false)
+  const [isPasswordResetFlow, setIsPasswordResetFlow] = useState(false)
 
   useEffect(() => {
+    // Check if this is a password reset flow
+    const checkPasswordResetFlow = () => {
+      const hash = window.location.hash
+      if (hash && hash.includes('access_token') && hash.includes('type=recovery')) {
+        console.log('Password reset flow detected')
+        setIsPasswordResetFlow(true)
+        // Redirect to reset password page
+        window.location.href = '/reset-password' + hash
+        return true
+      }
+      return false
+    }
+
     // Get initial session
     const getSession = async () => {
+      // Check for password reset flow first
+      if (checkPasswordResetFlow()) {
+        return
+      }
+
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
       setLoading(false)
@@ -26,13 +45,21 @@ export default function Home() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null)
-        setLoading(false)
+        // Don't update user state if we're in password reset flow
+        if (!isPasswordResetFlow) {
+          setUser(session?.user ?? null)
+          setLoading(false)
+        }
       }
     )
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [isPasswordResetFlow])
+
+  // If we're in password reset flow, show loading
+  if (isPasswordResetFlow) {
+    return <LoadingSpinner />
+  }
 
   if (loading) {
     return <LoadingSpinner />
