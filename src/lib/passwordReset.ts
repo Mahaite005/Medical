@@ -72,14 +72,21 @@ export async function verifyResetCode(email: string, code: string) {
 
 // Send reset password email using Supabase only (no code)
 export async function sendResetPasswordEmail(email: string) {
-  // Use Supabase built-in method to send reset link
-  const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase())
+  // Get the site URL from environment or use Vercel URL
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'
+  
+  // Use Supabase built-in method to send reset link with custom redirect URL
+  const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase(), {
+    redirectTo: `${siteUrl}/reset-password`
+  })
+  
   if (error) {
     console.error('❌ فشل في إرسال رابط إعادة تعيين كلمة المرور:', error)
     throw new Error('فشل في إرسال رابط إعادة تعيين كلمة المرور')
   }
   // For development
   console.log('📧 تم إرسال رابط إعادة تعيين كلمة المرور عبر Supabase')
+  console.log('🔗 رابط إعادة التوجيه:', `${siteUrl}/reset-password`)
   return true
 }
 

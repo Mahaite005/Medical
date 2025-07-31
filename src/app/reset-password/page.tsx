@@ -23,17 +23,23 @@ export default function ResetPasswordPage() {
     const doLogoutAndSetSession = async () => {
       if (accessToken && refreshToken && !tokenTried) {
         setTokenTried(true);
-        // تسجيل خروج إجباري
-        await supabase.auth.signOut();
-        // ثم setSession بالتوكنات الجديدة
-        const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-        if (error) {
-          setError('رابط غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.');
-        } else {
-          setSessionReady(true);
+        try {
+          // تسجيل خروج إجباري
+          await supabase.auth.signOut();
+          // ثم setSession بالتوكنات الجديدة
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (error) {
+            console.error('Session error:', error);
+            setError('رابط غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.');
+          } else {
+            setSessionReady(true);
+          }
+        } catch (error) {
+          console.error('Error setting session:', error);
+          setError('حدث خطأ في معالجة الرابط. يرجى طلب رابط جديد.');
         }
       }
     };
@@ -55,16 +61,23 @@ export default function ResetPasswordPage() {
     }
     setLoading(true);
 
-    const { error } = await supabase.auth.updateUser({ password });
-    setLoading(false);
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      setLoading(false);
 
-    if (error) {
-      setError(error.message || 'حدث خطأ أثناء تحديث كلمة المرور');
-    } else {
-      setSuccess('تم تحديث كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول.');
-      setTimeout(() => {
-        router.push('/');
-      }, 2000);
+      if (error) {
+        console.error('Password update error:', error);
+        setError(error.message || 'حدث خطأ أثناء تحديث كلمة المرور');
+      } else {
+        setSuccess('تم تحديث كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول.');
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      setLoading(false);
+      setError('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
     }
   };
 

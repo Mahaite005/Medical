@@ -177,12 +177,13 @@ export default function AuthComponent() {
 
         // إرسال رابط إعادة تعيين كلمة المرور عبر البريد الإلكتروني فقط
         await sendResetPasswordEmail(resetEmail)
-        setSuccessMessage('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد واتباع التعليمات.')
+        setSuccessMessage('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد (والبريد المزعج) واتباع الرابط المرفق.')
         setLoading(false)
         return
       }
       // باقي الخطوات (التحقق من الكود وتعيين كلمة المرور) لم تعد مطلوبة
     } catch (error: any) {
+      console.error('Password reset error:', error);
       setError(error.message || 'حدث خطأ أثناء إعادة تعيين كلمة المرور')
     }
     setLoading(false)
@@ -212,7 +213,7 @@ export default function AuthComponent() {
               إعادة تعيين كلمة المرور
             </h1>
             <p className="text-gray-600">
-              {forgotPasswordStep === 1 && 'أدخل بريدك الإلكتروني لإرسال رمز التحقق'}
+              {forgotPasswordStep === 1 && 'أدخل بريدك الإلكتروني لإرسال رابط إعادة تعيين كلمة المرور'}
               {forgotPasswordStep === 2 && 'أدخل رمز التحقق المرسل إلى بريدك'}
               {forgotPasswordStep === 3 && 'أدخل كلمة المرور الجديدة'}
             </p>
@@ -225,16 +226,22 @@ export default function AuthComponent() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     البريد الإلكتروني
                   </label>
+                  <p className="text-sm text-gray-500 mb-3">
+                    سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني
+                  </p>
                   <div className="relative">
                     <Mail className="absolute right-3 top-3 h-5 w-5 text-gray-400" />
-                    <input
-                      type="email"
-                      value={resetEmail}
-                      onChange={(e) => setResetEmail(e.target.value)}
-                      className="w-full pr-10 pl-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="أدخل بريدك الإلكتروني"
-                      required
-                    />
+                                      <input
+                    type="email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="w-full pr-10 pl-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="أدخل بريدك الإلكتروني"
+                    required
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    مثال: example@gmail.com
+                  </p>
                   </div>
                 </div>
               )}
