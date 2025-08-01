@@ -167,39 +167,29 @@ export default function AuthComponent() {
     setSuccessMessage('')
 
     try {
-      if (forgotPasswordStep === 1) {
-        // Validate email
-        if (!validateEmail(resetEmail)) {
-          setError('يرجى إدخال بريد إلكتروني صحيح')
-          setLoading(false)
-          return
-        }
-
-        // إرسال رابط إعادة تعيين كلمة المرور عبر API المخصص
-        const response = await fetch('/api/password-reset', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email: resetEmail })
-        })
-
-        const result = await response.json()
-
-        if (!response.ok) {
-          throw new Error(result.error || 'فشل في إرسال رابط إعادة تعيين كلمة المرور')
-        }
-
-        setSuccessMessage('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد (والبريد المزعج) واتباع الرابط المرفق.')
+      // Validate email
+      if (!validateEmail(resetEmail)) {
+        setError('يرجى إدخال بريد إلكتروني صحيح')
         setLoading(false)
         return
       }
-      // باقي الخطوات (التحقق من الكود وتعيين كلمة المرور) لم تعد مطلوبة
+
+      // Use Supabase's built-in password reset
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`
+      })
+
+      if (error) {
+        throw error
+      }
+
+      setSuccessMessage('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد (والبريد المزعج) واتباع الرابط المرفق.')
     } catch (error: any) {
-      console.error('Password reset error:', error);
+      console.error('Password reset error:', error)
       setError(error.message || 'حدث خطأ أثناء إعادة تعيين كلمة المرور')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const resetForgotPassword = () => {

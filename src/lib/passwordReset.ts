@@ -70,35 +70,29 @@ export async function verifyResetCode(email: string, code: string) {
   return true
 }
 
-// Send reset password email using Supabase only (no code)
+// Send reset password email using Supabase
 export async function sendResetPasswordEmail(email: string) {
   try {
-    // Get the site URL from environment or use Vercel URL
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'
+    console.log('🌐 Site URL:', siteUrl)
     
-    // Generate a custom reset token using Supabase's internal method
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase(), {
-      redirectTo: `${siteUrl}/reset-password`
-    })
-    
+    const { data, error } = await supabase.auth.resetPasswordForEmail(
+      email.toLowerCase(),
+      {
+        redirectTo: `${siteUrl}/reset-password`
+      }
+    )
+
     if (error) {
-      console.error('❌ فشل في إرسال رابط إعادة تعيين كلمة المرور:', error)
-      throw new Error('فشل في إرسال رابط إعادة تعيين كلمة المرور')
+      console.error('❌ Error sending reset password email:', error)
+      throw error
     }
-    
-    // For development and debugging
-    console.log('📧 تم إرسال رابط إعادة تعيين كلمة المرور عبر Supabase')
-    console.log('🔗 رابط إعادة التوجيه:', `${siteUrl}/reset-password`)
-    console.log('📧 البريد الإلكتروني:', email)
-    
-    // Note: The email template in Supabase dashboard needs to be updated
-    // to use the correct URL instead of localhost:3002
-    // This is a Supabase configuration issue, not a code issue
-    
+
+    console.log('✅ Reset password email sent successfully')
     return true
   } catch (error) {
-    console.error('❌ خطأ في إرسال رابط إعادة تعيين كلمة المرور:', error)
-    throw new Error('فشل في إرسال رابط إعادة تعيين كلمة المرور')
+    console.error('❌ Error in sendResetPasswordEmail:', error)
+    throw error
   }
 }
 
