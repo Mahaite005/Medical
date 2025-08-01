@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     const timeout = fileType === 'application/pdf' ? 60000 : 30000; // 60s for PDF, 30s for images
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    timeoutId = setTimeout(() => controller.abort(), timeout);
     
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_GEMINI_API_KEY}`, {
       method: 'POST',
