@@ -45,7 +45,7 @@ function validateCSRFToken(request: NextRequest): boolean {
 }
 
 export async function POST(request: NextRequest) {
-  let timeoutId: NodeJS.Timeout;
+  let timeoutId: NodeJS.Timeout | undefined;
   try {
     console.log('Analyze API called');
     
@@ -212,7 +212,10 @@ ${fileType === 'application/pdf' ? 'إذا كان الملف يحتوي على �
     console.log('Analysis completed successfully');
     
     // Clear timeout since request completed successfully
-    clearTimeout(timeoutId);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = undefined;
+    }
 
     const result = data.candidates?.[0]?.content?.parts?.[0]?.text || 'لم يتمكن من تحليل الملف';
 
@@ -225,8 +228,9 @@ ${fileType === 'application/pdf' ? 'إذا كان الملف يحتوي على �
     console.error('Analysis error:', error);
     
     // Clear timeout if it exists
-    if (typeof timeoutId !== 'undefined') {
+    if (timeoutId) {
       clearTimeout(timeoutId);
+      timeoutId = undefined;
     }
     
     // Log more details about the error
