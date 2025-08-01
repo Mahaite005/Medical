@@ -43,11 +43,20 @@ export default function ResetPasswordPage() {
         console.log('Setting up session for password reset...');
         
         try {
-          // Force logout first
+          // First check if the token is valid for password reset
+          const { data: { user }, error: verifyError } = await supabase.auth.getUser(accessToken);
+          
+          if (verifyError || !user) {
+            console.error('Token verification error:', verifyError);
+            setError('رابط غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.');
+            return;
+          }
+
+          // Force logout first to clear any existing session
           await supabase.auth.signOut();
           console.log('Logged out successfully');
           
-          // Set session with reset tokens
+          // Set temporary session for password reset only
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
@@ -97,6 +106,10 @@ export default function ResetPasswordPage() {
       } else {
         console.log('Password updated successfully');
         setSuccess('تم تحديث كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول.');
+        
+        // Force logout after password update
+        await supabase.auth.signOut();
+        
         setTimeout(() => {
           router.push('/');
         }, 2000);
