@@ -45,6 +45,7 @@ function validateCSRFToken(request: NextRequest): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  let timeoutId: NodeJS.Timeout;
   try {
     console.log('Analyze API called');
     
