@@ -20,19 +20,50 @@ export default function ResetPasswordPage() {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
 
   useEffect(() => {
-    // Parse tokens from URL hash
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    
-    const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token');
-    
-    console.log('Reset password page - URL hash:', hash);
-    console.log('Access token found:', !!access_token);
-    console.log('Refresh token found:', !!refresh_token);
-    
-    setAccessToken(access_token);
-    setRefreshToken(refresh_token);
+    const parseTokensFromUrl = () => {
+      try {
+        // Get the full URL including hash
+        const fullUrl = window.location.href;
+        console.log('Full URL:', fullUrl);
+
+        // Parse tokens from URL hash
+        const hash = window.location.hash.substring(1);
+        console.log('URL hash:', hash);
+
+        // Try to parse parameters
+        const params = new URLSearchParams(hash);
+        
+        const access_token = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
+        const type = params.get('type');
+        
+        console.log('Token type:', type);
+        console.log('Access token present:', !!access_token);
+        console.log('Refresh token present:', !!refresh_token);
+        
+        // Validate we have the correct type of tokens
+        if (type !== 'recovery') {
+          console.error('Invalid token type:', type);
+          setError('رابط غير صالح. يرجى طلب رابط جديد.');
+          return;
+        }
+
+        if (!access_token || !refresh_token) {
+          console.error('Missing required tokens');
+          setError('رابط غير مكتمل. يرجى طلب رابط جديد.');
+          return;
+        }
+
+        setAccessToken(access_token);
+        setRefreshToken(refresh_token);
+      } catch (error) {
+        console.error('Error parsing URL:', error);
+        setError('حدث خطأ في معالجة الرابط. يرجى طلب رابط جديد.');
+      }
+    };
+
+    // Parse tokens when component mounts
+    parseTokensFromUrl();
   }, []);
 
   // Handle session setup
@@ -41,36 +72,51 @@ export default function ResetPasswordPage() {
       if (accessToken && refreshToken && !tokenTried) {
         setTokenTried(true);
         console.log('Setting up session for password reset...');
+        console.log('Access Token:', accessToken);
+        console.log('Refresh Token:', refreshToken);
         
         try {
-          // First check if the token is valid for password reset
-          const { data: { user }, error: verifyError } = await supabase.auth.getUser(accessToken);
-          
-          if (verifyError || !user) {
-            console.error('Token verification error:', verifyError);
+          // Force logout first to clear any existing session
+          const { error: signOutError } = await supabase.auth.signOut();
+          if (signOutError) {
+            console.error('Error signing out:', signOutError);
+          } else {
+            console.log('Logged out successfully');
+          }
+
+          // Set up new session
+          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+
+          if (sessionError) {
+            console.error('Session setup error:', sessionError);
             setError('رابط غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.');
             return;
           }
 
-          // Force logout first to clear any existing session
-          await supabase.auth.signOut();
-          console.log('Logged out successfully');
-          
-          // Set temporary session for password reset only
-          const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-          
-          if (error) {
-            console.error('Session setup error:', error);
-            setError('رابط غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.');
-          } else {
-            console.log('Session set successfully for password reset');
-            setSessionReady(true);
+          if (!sessionData.session) {
+            console.error('No session data received');
+            setError('فشل في إنشاء جلسة جديدة. يرجى طلب رابط جديد.');
+            return;
           }
+
+          console.log('Session set successfully:', sessionData.session);
+
+          // Verify the session is working
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          
+          if (userError || !user) {
+            console.error('User verification error:', userError);
+            setError('فشل في التحقق من المستخدم. يرجى طلب رابط جديد.');
+            return;
+          }
+
+          console.log('User verified successfully:', user);
+          setSessionReady(true);
         } catch (error) {
-          console.error('Error setting session:', error);
+          console.error('Error in session setup:', error);
           setError('حدث خطأ في معالجة الرابط. يرجى طلب رابط جديد.');
         }
       }
