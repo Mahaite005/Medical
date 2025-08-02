@@ -174,12 +174,18 @@ export default function AuthComponent() {
         return
       }
 
+      // Get site URL from environment or use current origin
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+      const redirectUrl = `${siteUrl}/reset-password`
+      
       console.log('Sending password reset email to:', resetEmail)
-      console.log('Using redirect URL:', `${window.location.origin}/reset-password`)
+      console.log('Using site URL:', siteUrl)
+      console.log('Using redirect URL:', redirectUrl)
       
       // Use Supabase's built-in password reset
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: redirectUrl,
+        captchaToken: undefined // No captcha required
       })
 
       if (error) {

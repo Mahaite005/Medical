@@ -27,9 +27,9 @@ export default function ResetPasswordPage() {
         console.log('Full URL:', fullUrl);
 
         // Check if we have a hash fragment
-        if (!window.location.hash) {
-          console.error('No hash fragment found in URL');
-          setError('رابط غير صالح. يرجى طلب رابط جديد.');
+        if (!window.location.hash || window.location.hash === '#') {
+          console.error('No hash fragment found in URL or empty hash');
+          setError('رابط غير صالح. يرجى طلب رابط جديد. تأكد من النقر على الرابط مباشرة من بريدك الإلكتروني.');
           return;
         }
 
@@ -47,17 +47,18 @@ export default function ResetPasswordPage() {
         console.log('Token type:', type);
         console.log('Access token present:', !!access_token);
         console.log('Refresh token present:', !!refresh_token);
+        console.log('All URL parameters:', Array.from(params.entries()));
         
         // Validate we have the correct type of tokens
         if (type !== 'recovery') {
           console.error('Invalid token type:', type);
-          setError('رابط غير صالح. يرجى طلب رابط جديد.');
+          setError('رابط غير صالح. يرجى طلب رابط جديد. نوع الرمز غير صحيح.');
           return;
         }
 
         if (!access_token || !refresh_token) {
           console.error('Missing required tokens');
-          setError('رابط غير مكتمل. يرجى طلب رابط جديد.');
+          setError('رابط غير مكتمل. يرجى طلب رابط جديد. لم يتم العثور على رموز الوصول المطلوبة.');
           return;
         }
 

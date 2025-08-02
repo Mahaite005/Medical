@@ -50,7 +50,8 @@ const nextConfig = {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     GOOGLE_GEMINI_API_KEY: process.env.GOOGLE_GEMINI_API_KEY,
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app',
+    // Always use the Vercel URL for production and localhost for development
+    NEXT_PUBLIC_SITE_URL: 'https://medicalapp-teal.vercel.app',
   },
 }
 

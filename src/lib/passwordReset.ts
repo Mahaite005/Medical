@@ -73,8 +73,8 @@ export async function verifyResetCode(email: string, code: string) {
 // Send reset password email using Supabase
 export async function sendResetPasswordEmail(email: string) {
   try {
-    // Always use absolute URL for redirectTo
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'
+    // Always use the production URL for reset password emails
+    const siteUrl = 'https://medicalapp-teal.vercel.app'
     console.log('🌐 Site URL for password reset:', siteUrl)
     
     // Make sure the redirect URL is absolute and includes the protocol
@@ -84,7 +84,8 @@ export async function sendResetPasswordEmail(email: string) {
     const { data, error } = await supabase.auth.resetPasswordForEmail(
       email.toLowerCase(),
       {
-        redirectTo: redirectUrl
+        redirectTo: redirectUrl,
+        captchaToken: undefined // No captcha required
       }
     )
 
