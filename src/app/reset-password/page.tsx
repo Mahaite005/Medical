@@ -15,86 +15,60 @@ export default function ResetPasswordPage() {
   const [sessionReady, setSessionReady] = useState(false);
   const [tokenTried, setTokenTried] = useState(false);
 
-  // Get tokens from URL hash (Supabase sends them in the hash fragment)
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState<string | null>(null);
+  // Get code from URL search params (Supabase sends it via the callback route)
+  const [authCode, setAuthCode] = useState<string | null>(null);
 
   useEffect(() => {
-    const parseTokensFromUrl = () => {
+    const parseCodeFromUrl = () => {
       try {
-        // Get the full URL including hash
+        // Get the full URL including search params
         const fullUrl = window.location.href;
         console.log('Full URL:', fullUrl);
 
-        // Check if we have a hash fragment
-        if (!window.location.hash || window.location.hash === '#') {
-          console.error('No hash fragment found in URL or empty hash');
+        // Get search params from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const type = urlParams.get('type');
+        
+        console.log('URL search params:', Array.from(urlParams.entries()));
+        console.log('Code present:', !!code);
+        console.log('Token type:', type);
+        
+        // Check if we have the required parameters
+        if (!code) {
+          console.error('No code found in URL');
           setError('رابط غير صالح. يرجى طلب رابط جديد. تأكد من النقر على الرابط مباشرة من بريدك الإلكتروني.');
           return;
         }
 
-        // Parse tokens from URL hash - remove the # character
-        const hash = window.location.hash.substring(1);
-        console.log('URL hash:', hash);
-
-        // Try to parse parameters
-        const params = new URLSearchParams(hash);
-        
-        const access_token = params.get('access_token');
-        const refresh_token = params.get('refresh_token');
-        const type = params.get('type');
-        
-        console.log('Token type:', type);
-        console.log('Access token present:', !!access_token);
-        console.log('Refresh token present:', !!refresh_token);
-        console.log('All URL parameters:', Array.from(params.entries()));
-        
-        // Validate we have the correct type of tokens
+        // Validate we have the correct type
         if (type !== 'recovery') {
           console.error('Invalid token type:', type);
           setError('رابط غير صالح. يرجى طلب رابط جديد. نوع الرمز غير صحيح.');
           return;
         }
 
-        if (!access_token || !refresh_token) {
-          console.error('Missing required tokens');
-          setError('رابط غير مكتمل. يرجى طلب رابط جديد. لم يتم العثور على رموز الوصول المطلوبة.');
-          return;
-        }
-
-        setAccessToken(access_token);
-        setRefreshToken(refresh_token);
+        setAuthCode(code);
       } catch (error) {
         console.error('Error parsing URL:', error);
         setError('حدث خطأ في معالجة الرابط. يرجى طلب رابط جديد.');
       }
     };
 
-    // Parse tokens when component mounts
+    // Parse code when component mounts
     if (typeof window !== 'undefined') {
-      parseTokensFromUrl();
+      parseCodeFromUrl();
     }
   }, []);
 
-  // Handle session setup
+  // Handle session setup using the code
   useEffect(() => {
-    const doLogoutAndSetSession = async () => {
-      if (accessToken && refreshToken && !tokenTried) {
+    const exchangeCodeForSession = async () => {
+      if (authCode && !tokenTried) {
         setTokenTried(true);
-        console.log('Setting up session for password reset...');
+        console.log('Exchanging code for session...');
         
         try {
-          // First verify the token is valid
-          const { data: userData, error: verifyError } = await supabase.auth.getUser(accessToken);
-          
-          if (verifyError || !userData.user) {
-            console.error('Token verification error:', verifyError);
-            setError('رمز الوصول غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.');
-            return;
-          }
-          
-          console.log('Token verified successfully for user:', userData.user.email);
-          
           // Force logout first to clear any existing session
           const { error: signOutError } = await supabase.auth.signOut();
           if (signOutError) {
@@ -103,25 +77,31 @@ export default function ResetPasswordPage() {
             console.log('Logged out successfully');
           }
 
-          // Set up new session
-          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
-          });
+          // Exchange the code for a session
+          const { data, error } = await supabase.auth.exchangeCodeForSession(authCode);
 
-          if (sessionError) {
-            console.error('Session setup error:', sessionError);
-            setError('رابط غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.');
+          if (error) {
+            console.error('Code exchange error:', error);
+            setError('رمز الوصول غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.');
             return;
           }
 
-          if (!sessionData.session) {
+          if (!data.session) {
             console.error('No session data received');
             setError('فشل في إنشاء جلسة جديدة. يرجى طلب رابط جديد.');
             return;
           }
 
-          console.log('Session set successfully for password reset');
+          // Verify the user is logged in
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          
+          if (userError || !userData.user) {
+            console.error('User verification error:', userError);
+            setError('فشل في التحقق من المستخدم. يرجى طلب رابط جديد.');
+            return;
+          }
+          
+          console.log('Session set successfully for user:', userData.user.email);
           setSessionReady(true);
         } catch (error) {
           console.error('Error in session setup:', error);
@@ -130,8 +110,8 @@ export default function ResetPasswordPage() {
       }
     };
     
-    doLogoutAndSetSession();
-  }, [accessToken, refreshToken, tokenTried]);
+    exchangeCodeForSession();
+  }, [authCode, tokenTried]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,8 +156,8 @@ export default function ResetPasswordPage() {
     }
   };
 
-  // Show error if no tokens found
-  if (!accessToken || !refreshToken) {
+  // Show error if no code found
+  if (!authCode) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">

@@ -9,13 +9,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://medicalapp-teal.vercel.app/icon-192x192.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/5394/5394269.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://medicalapp-teal.vercel.app/icon-512x512.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/5394/5394269.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

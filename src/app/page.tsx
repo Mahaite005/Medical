@@ -15,26 +15,8 @@ export default function Home() {
   const [isPasswordResetFlow, setIsPasswordResetFlow] = useState(false)
 
   useEffect(() => {
-    // Check if this is a password reset flow
-    const checkPasswordResetFlow = () => {
-      const hash = window.location.hash
-      if (hash && hash.includes('access_token') && hash.includes('type=recovery')) {
-        console.log('Password reset flow detected')
-        setIsPasswordResetFlow(true)
-        // Redirect to reset password page
-        window.location.href = '/reset-password' + hash
-        return true
-      }
-      return false
-    }
-
     // Get initial session
     const getSession = async () => {
-      // Check for password reset flow first
-      if (checkPasswordResetFlow()) {
-        return
-      }
-
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
       setLoading(false)

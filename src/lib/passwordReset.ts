@@ -78,7 +78,8 @@ export async function sendResetPasswordEmail(email: string) {
     console.log('🌐 Site URL for password reset:', siteUrl)
     
     // Make sure the redirect URL is absolute and includes the protocol
-    const redirectUrl = `${siteUrl}/reset-password`
+    // Important: We're using /api/auth/callback as the redirect URL to ensure proper token handling
+    const redirectUrl = `${siteUrl}/api/auth/callback`
     console.log('🔄 Redirect URL:', redirectUrl)
     
     const { data, error } = await supabase.auth.resetPasswordForEmail(

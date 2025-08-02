@@ -175,8 +175,8 @@ export default function AuthComponent() {
       }
 
       // Get site URL from environment or use current origin
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
-      const redirectUrl = `${siteUrl}/reset-password`
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'
+      const redirectUrl = `${siteUrl}/api/auth/callback`
       
       console.log('Sending password reset email to:', resetEmail)
       console.log('Using site URL:', siteUrl)
