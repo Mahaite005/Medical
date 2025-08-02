@@ -174,15 +174,20 @@ export default function AuthComponent() {
         return
       }
 
+      console.log('Sending password reset email to:', resetEmail)
+      console.log('Using redirect URL:', `${window.location.origin}/reset-password`)
+      
       // Use Supabase's built-in password reset
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: `${window.location.origin}/reset-password`
       })
 
       if (error) {
+        console.error('Supabase resetPasswordForEmail error:', error)
         throw error
       }
 
+      console.log('Password reset email sent successfully')
       setSuccessMessage('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد (والبريد المزعج) واتباع الرابط المرفق.')
     } catch (error: any) {
       console.error('Password reset error:', error)

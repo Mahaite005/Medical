@@ -30,7 +30,8 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="تطبيق الذكاء الاصطناعي الطبي" />
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <link rel="apple-touch-icon" href="https://medicalapp-teal.vercel.app/icon-192x192.png" />
+        <link rel="icon" href="https://medicalapp-teal.vercel.app/favicon.ico" />
       </head>
       <body className={`min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 ${inter.className}`}>
         <div className="min-h-screen flex flex-col">

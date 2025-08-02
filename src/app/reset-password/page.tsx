@@ -26,7 +26,14 @@ export default function ResetPasswordPage() {
         const fullUrl = window.location.href;
         console.log('Full URL:', fullUrl);
 
-        // Parse tokens from URL hash
+        // Check if we have a hash fragment
+        if (!window.location.hash) {
+          console.error('No hash fragment found in URL');
+          setError('رابط غير صالح. يرجى طلب رابط جديد.');
+          return;
+        }
+
+        // Parse tokens from URL hash - remove the # character
         const hash = window.location.hash.substring(1);
         console.log('URL hash:', hash);
 
@@ -63,7 +70,9 @@ export default function ResetPasswordPage() {
     };
 
     // Parse tokens when component mounts
-    parseTokensFromUrl();
+    if (typeof window !== 'undefined') {
+      parseTokensFromUrl();
+    }
   }, []);
 
   // Handle session setup
@@ -72,10 +81,19 @@ export default function ResetPasswordPage() {
       if (accessToken && refreshToken && !tokenTried) {
         setTokenTried(true);
         console.log('Setting up session for password reset...');
-        console.log('Access Token:', accessToken);
-        console.log('Refresh Token:', refreshToken);
         
         try {
+          // First verify the token is valid
+          const { data: userData, error: verifyError } = await supabase.auth.getUser(accessToken);
+          
+          if (verifyError || !userData.user) {
+            console.error('Token verification error:', verifyError);
+            setError('رمز الوصول غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.');
+            return;
+          }
+          
+          console.log('Token verified successfully for user:', userData.user.email);
+          
           // Force logout first to clear any existing session
           const { error: signOutError } = await supabase.auth.signOut();
           if (signOutError) {
@@ -102,18 +120,7 @@ export default function ResetPasswordPage() {
             return;
           }
 
-          console.log('Session set successfully:', sessionData.session);
-
-          // Verify the session is working
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
-          
-          if (userError || !user) {
-            console.error('User verification error:', userError);
-            setError('فشل في التحقق من المستخدم. يرجى طلب رابط جديد.');
-            return;
-          }
-
-          console.log('User verified successfully:', user);
+          console.log('Session set successfully for password reset');
           setSessionReady(true);
         } catch (error) {
           console.error('Error in session setup:', error);
@@ -130,8 +137,8 @@ export default function ResetPasswordPage() {
     setError('');
     setSuccess('');
     
-    if (password.length < 6) {
-      setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+    if (password.length < 8) {
+      setError('كلمة المرور يجب أن تكون 8 أحرف على الأقل');
       return;
     }
     if (password !== confirm) {
@@ -151,14 +158,15 @@ export default function ResetPasswordPage() {
         setError(error.message || 'حدث خطأ أثناء تحديث كلمة المرور');
       } else {
         console.log('Password updated successfully');
-        setSuccess('تم تحديث كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول.');
+        setSuccess('تم تحديث كلمة المرور بنجاح! سيتم توجيهك للصفحة الرئيسية للتسجيل بكلمة المرور الجديدة.');
         
         // Force logout after password update
         await supabase.auth.signOut();
+        console.log('Logged out after password update');
         
         setTimeout(() => {
           router.push('/');
-        }, 2000);
+        }, 3000);
       }
     } catch (error) {
       console.error('Unexpected error:', error);
@@ -172,9 +180,16 @@ export default function ResetPasswordPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
+          <div className="text-red-500 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
           <h2 className="text-xl font-bold mb-4 text-red-600">رابط غير صالح</h2>
           <p className="text-gray-600 mb-4">
             يرجى التأكد من استخدام رابط إعادة تعيين كلمة المرور الصحيح من بريدك الإلكتروني.
+            <br />
+            <span className="text-sm text-gray-500 block mt-2">تأكد من النقر على الرابط مباشرة من البريد الإلكتروني وعدم نسخه ولصقه.</span>
           </p>
           <button
             onClick={() => router.push('/')}
@@ -193,7 +208,13 @@ export default function ResetPasswordPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
           <h2 className="text-xl font-bold mb-4">جاري التحقق من الرابط...</h2>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-500 text-sm">يرجى الانتظار بينما نتحقق من صلاحية رابط إعادة تعيين كلمة المرور</p>
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
         </div>
       </div>
     );
