@@ -34,6 +34,7 @@ import StorageMonitor from './StorageMonitor'
 interface SmartDashboardProps {
   user: User
   profile: any
+  needsPasswordReset?: boolean
 }
 
 // استخدام RealHealthMetric من المكتبة الجديدة
@@ -65,7 +66,7 @@ interface HealthAnalysis {
   generatedAt?: string
 }
 
-export default function SmartDashboard({ user, profile }: SmartDashboardProps) {
+export default function SmartDashboard({ user, profile, needsPasswordReset }: SmartDashboardProps) {
   const [healthMetrics, setHealthMetrics] = useState<RealHealthMetric[]>([])
   const [alerts, setAlerts] = useState<HealthAlert[]>([])
   const [tips, setTips] = useState<HealthTip[]>([])
@@ -75,6 +76,7 @@ export default function SmartDashboard({ user, profile }: SmartDashboardProps) {
   const [medicalHistory, setMedicalHistory] = useState<any[]>([])
   const [analyzing, setAnalyzing] = useState(false)
   const [showManualInput, setShowManualInput] = useState(false)
+  const [showPasswordNotice, setShowPasswordNotice] = useState(false)
 
   useEffect(() => {
     loadRealHealthData()
@@ -86,6 +88,29 @@ export default function SmartDashboard({ user, profile }: SmartDashboardProps) {
       generateAIAnalysis()
     }
   }, [healthMetrics, medicalHistory])
+
+  // إدارة ملاحظة تغيير كلمة المرور
+  useEffect(() => {
+    if (needsPasswordReset) {
+      // التحقق من localStorage لمعرفة آخر مرة تم إخفاء الملاحظة
+      const lastHidden = localStorage.getItem(`password-notice-hidden-${user.id}`)
+      
+      if (lastHidden) {
+        const hiddenTime = new Date(lastHidden)
+        const now = new Date()
+        const diffMinutes = (now.getTime() - hiddenTime.getTime()) / (1000 * 60)
+        
+        // إذا مر أكثر من 15 دقيقة، اعرض الملاحظة مرة أخرى
+        if (diffMinutes > 15) {
+          setShowPasswordNotice(true)
+          localStorage.removeItem(`password-notice-hidden-${user.id}`)
+        }
+      } else {
+        // أول مرة، اعرض الملاحظة
+        setShowPasswordNotice(true)
+      }
+    }
+  }, [needsPasswordReset, user.id])
 
   // جلب البيانات الصحية الحقيقية
   const loadRealHealthData = useCallback(async () => {
@@ -219,6 +244,12 @@ export default function SmartDashboard({ user, profile }: SmartDashboardProps) {
   // إضافة مؤشر صحي يدوياً
   const handleAddManualMetric = (metric: RealHealthMetric) => {
     setHealthMetrics(prev => [...prev, metric])
+  }
+
+  // إغلاق ملاحظة تغيير كلمة المرور
+  const handleHidePasswordNotice = () => {
+    setShowPasswordNotice(false)
+    localStorage.setItem(`password-notice-hidden-${user.id}`, new Date().toISOString())
   }
 
   // توليد تحليل طبي شامل
@@ -392,6 +423,50 @@ export default function SmartDashboard({ user, profile }: SmartDashboardProps) {
           ))}
         </div>
       </div>
+
+      {/* ملاحظة تغيير كلمة المرور */}
+      {needsPasswordReset && showPasswordNotice && (
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-2xl p-6 shadow-sm animate-pulse">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-orange-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-orange-900 mb-2">
+                  🔐 مطلوب تغيير كلمة المرور
+                </h3>
+                <p className="text-sm text-orange-800 leading-relaxed mb-3">
+                  تم طلب إعادة تعيين كلمة المرور لحسابك. لضمان أمان بياناتك الطبية:
+                </p>
+                <div className="bg-orange-100 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-orange-900 font-medium">
+                    📍 <span className="font-bold">الخطوات المطلوبة:</span>
+                  </p>
+                  <ol className="list-decimal list-inside text-sm text-orange-800 mt-2 space-y-1">
+                    <li>اذهب إلى قسم <span className="bg-orange-200 px-1 rounded font-bold">"تعديل الملف الشخصي"</span> بالأسفل</li>
+                    <li>ستجد خانة <span className="bg-orange-200 px-1 rounded font-bold">"تعيين كلمة المرور الجديدة"</span></li>
+                    <li>أدخل كلمة مرور جديدة وقوية (8 أحرف على الأقل)</li>
+                    <li>اضغط على "تحديث كلمة المرور"</li>
+                  </ol>
+                </div>
+                <p className="text-xs text-orange-700">
+                  💡 ستختفي هذه الملاحظة تلقائياً بعد 15 دقيقة وستظهر مرة أخرى عند تسجيل الدخول التالي حتى يتم تغيير كلمة المرور.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleHidePasswordNotice}
+              className="flex-shrink-0 p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-100 rounded-full transition-colors"
+              title="إخفاء لمدة 15 دقيقة"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* التنبيهات الصحية */}
       <div className="bg-white rounded-2xl p-6 shadow-sm">

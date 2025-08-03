@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://medicalapp-teal.vercel.app/sitemap.xml
+
+# Disallow sensitive areas
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /reset-password/
+
+# Allow specific public pages
+Allow: /
+Allow: /api/og/
+
+# Crawl delay (optional)
+Crawl-delay: 1

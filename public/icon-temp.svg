@@ -1,0 +1,25 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="192" height="192" rx="24" fill="url(#gradient)"/>
+  
+  <!-- Medical Cross -->
+  <rect x="88" y="48" width="16" height="96" rx="8" fill="white"/>
+  <rect x="48" y="88" width="96" height="16" rx="8" fill="white"/>
+  
+  <!-- Digital Elements -->
+  <circle cx="64" cy="64" r="4" fill="rgba(255,255,255,0.8)"/>
+  <circle cx="128" cy="64" r="4" fill="rgba(255,255,255,0.8)"/>
+  <circle cx="64" cy="128" r="4" fill="rgba(255,255,255,0.8)"/>
+  <circle cx="128" cy="128" r="4" fill="rgba(255,255,255,0.8)"/>
+  
+  <!-- Medical Symbol -->
+  <path d="M96 32 L104 40 L96 48 L88 40 Z" fill="white" opacity="0.9"/>
+  <path d="M96 144 L104 152 L96 160 L88 152 Z" fill="white" opacity="0.9"/>
+  
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>

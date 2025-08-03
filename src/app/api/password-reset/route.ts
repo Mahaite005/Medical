@@ -95,7 +95,7 @@ async function generateCustomResetToken(email: string): Promise<string | null> {
 
 // Create custom email template with correct URL
 function createCustomResetEmailTemplate(email: string, resetLink: string) {
-  const subject = 'إعادة تعيين كلمة المرور - تطبيق التحليل الطبي'
+      const subject = 'إعادة تعيين كلمة المرور - المختبر الرقمي'
   
   const html = `
     <!DOCTYPE html>
@@ -103,7 +103,7 @@ function createCustomResetEmailTemplate(email: string, resetLink: string) {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>إعادة تعيين كلمة المرور - تطبيق التحليل الطبي</title>
+      <title>إعادة تعيين كلمة المرور - المختبر الرقمي</title>
       <style>
         body { background: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #334155; margin: 0; padding: 0; direction: rtl; }
         .container { max-width: 500px; margin: 40px auto; background: #fff; border-radius: 16px; box-shadow: 0 8px 32px rgba(30, 64, 175, 0.08); overflow: hidden; border: 1px solid #e2e8f0; }
@@ -123,7 +123,7 @@ function createCustomResetEmailTemplate(email: string, resetLink: string) {
       <div class="container">
         <div class="header">
           <div class="logo">🩺</div>
-          <h1>تطبيق التحليل الطبي</h1>
+          <h1>المختبر الرقمي</h1>
           <p>منصة التحليل الطبي الذكي</p>
         </div>
         <div class="content">
@@ -145,7 +145,7 @@ function createCustomResetEmailTemplate(email: string, resetLink: string) {
           </p>
         </div>
         <div class="footer">
-          فريق الدعم الفني - تطبيق التحليل الطبي<br>
+          فريق الدعم الفني - المختبر الرقمي<br>
           جميع الحقوق محفوظة &copy; 2024
         </div>
       </div>

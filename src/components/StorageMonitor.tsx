@@ -265,12 +265,7 @@ export default function StorageMonitor() {
         </div>
       )}
 
-      {/* Upgrade Info */}
-      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <div className="text-sm text-blue-800">
-          <strong>ترقية الحساب:</strong> احصل على {limits.proTier} مساحة تخزين مع الخطة المدفوعة
-        </div>
-      </div>
+ 
     </div>
   )
 } 

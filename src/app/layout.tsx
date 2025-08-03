@@ -6,11 +6,52 @@ import { scheduleAutoCleanup } from '@/lib/autoCleanup'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'تطبيق التحليل الطبي',
-  description: 'تطبيق ويب حديث لتحليل نتائج الفحوصات الطبية بدقة عالية',
+  title: {
+    default: 'المختبر الرقمي - تحليل الفحوصات الطبية بالذكاء الاصطناعي',
+    template: '%s | المختبر الرقمي'
+  },
+  description: 'منصة رقمية متطورة لتحليل نتائج الفحوصات والتحاليل الطبية باستخدام الذكاء الاصطناعي. احصل على تقارير مفصلة ونصائح طبية شخصية مع أعلى معايير الأمان والخصوصية.',
+  keywords: ['تحليل طبي', 'فحوصات طبية', 'ذكاء اصطناعي', 'تقارير طبية', 'نصائح صحية', 'مختبر رقمي', 'صحة', 'طب', 'تشخيص'],
+  authors: [{ name: 'المختبر الرقمي' }],
+  creator: 'المختبر الرقمي',
+  publisher: 'المختبر الرقمي',
+  robots: 'index, follow',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
   themeColor: '#3b82f6',
   manifest: '/manifest.json',
+  
+  // Open Graph
+  openGraph: {
+    type: 'website',
+    locale: 'ar_EG',
+    url: 'https://medicalapp-teal.vercel.app',
+    title: 'المختبر الرقمي - تحليل الفحوصات الطبية بالذكاء الاصطناعي',
+    description: 'منصة رقمية متطورة لتحليل نتائج الفحوصات والتحاليل الطبية باستخدام الذكاء الاصطناعي',
+    siteName: 'المختبر الرقمي',
+    images: [
+      {
+        url: '/icon-192x192.png',
+        width: 192,
+        height: 192,
+        alt: 'المختبر الرقمي'
+      }
+    ]
+  },
+  
+  // Twitter Card
+  twitter: {
+    card: 'summary_large_image',
+    title: 'المختبر الرقمي - تحليل الفحوصات الطبية بالذكاء الاصطناعي',
+    description: 'منصة رقمية متطورة لتحليل نتائج الفحوصات والتحاليل الطبية باستخدام الذكاء الاصطناعي',
+    images: ['/icon-192x192.png']
+  },
+  
+  // App Links
+  other: {
+    'application-name': 'المختبر الرقمي',
+    'msapplication-TileColor': '#3b82f6',
+    'msapplication-config': '/browserconfig.xml'
+  }
 }
 
 export default function RootLayout({
@@ -30,11 +71,60 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="تطبيق التحليل الطبي" />
+        <meta name="apple-mobile-web-app-title" content="المختبر الرقمي" />
+        
+        {/* Enhanced SEO Meta Tags */}
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="google" content="notranslate" />
+        <meta name="language" content="Arabic" />
+        <meta name="geo.region" content="EG" />
+        <meta name="geo.country" content="Egypt" />
+        <meta name="audience" content="all" />
+        <meta name="rating" content="general" />
+        <meta name="distribution" content="global" />
+        <meta name="coverage" content="worldwide" />
+        <meta name="target" content="all" />
+        
+        {/* Icons and App Integration */}
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
         <link rel="icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
+        <link rel="mask-icon" href="/icon-192x192.png" color="#3b82f6" />
+        
+        {/* Preconnect to external domains for better performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+        
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "المختبر الرقمي",
+            "description": "منصة رقمية متطورة لتحليل نتائج الفحوصات والتحاليل الطبية باستخدام الذكاء الاصطناعي",
+            "applicationCategory": "HealthApplication",
+            "operatingSystem": "Web Browser",
+            "url": "https://medicalapp-teal.vercel.app",
+            "provider": {
+              "@type": "Organization",
+              "name": "المختبر الرقمي",
+              "url": "https://medicalapp-teal.vercel.app"
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "featureList": [
+              "تحليل الفحوصات الطبية",
+              "تقارير مفصلة",
+              "نصائح صحية شخصية",
+              "مراقبة المؤشرات الصحية",
+              "أمان البيانات"
+            ]
+          })}
+        </script>
       </head>
       <body className={`min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 ${inter.className}`}>
         <div className="min-h-screen flex flex-col">

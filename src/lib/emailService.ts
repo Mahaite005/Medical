@@ -83,7 +83,7 @@ export async function sendEmail(emailData: EmailTemplate) {
 
 // إنشاء قالب البريد الإلكتروني لإعادة تعيين كلمة المرور
 export function createPasswordResetTemplate(email: string, code: string): EmailTemplate {
-  const subject = 'رمز إعادة تعيين كلمة المرور - تطبيق التحليل الطبي'
+  const subject = 'رمز إعادة تعيين كلمة المرور - المختبر الرقمي'
   
   const html = `
     <!DOCTYPE html>
@@ -169,7 +169,7 @@ export function createPasswordResetTemplate(email: string, code: string): EmailT
         <div class="container">
             <div class="header">
                 <div class="logo">🩺</div>
-                <h1>تطبيق التحليل الطبي</h1>
+                <h1>المختبر الرقمي</h1>
                 <p>منصة التحليل الطبي الذكي</p>
             </div>
             
@@ -193,7 +193,7 @@ export function createPasswordResetTemplate(email: string, code: string): EmailT
             </div>
             
             <div class="footer">
-                شكراً لاستخدامك تطبيق التحليل الطبي<br>
+                شكراً لاستخدامك المختبر الرقمي<br>
                 فريق التطوير والدعم الفني
             </div>
         </div>

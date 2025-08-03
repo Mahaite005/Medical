@@ -1,7 +1,7 @@
 {
-  "name": "تطبيق التحليل الطبي",
-  "short_name": "تحليل طبي",
-  "description": "تطبيق ويب حديث لتحليل نتائج الفحوصات الطبية بدقة عالية باستخدام الذكاء الاصطناعي",
+  "name": "المختبر الرقمي",
+  "short_name": "المختبر الرقمي",
+  "description": "منصة رقمية متطورة لتحليل الفحوصات الطبية باستخدام الذكاء الاصطناعي",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -14,18 +14,13 @@
       "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/icon-512x512.png",
-      "sizes": "512x512",
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/favicon.ico",
-      "sizes": "48x48",
-      "type": "image/x-icon"
+      "purpose": "maskable"
     }
   ],
   "categories": ["medical", "health", "productivity", "utilities"]

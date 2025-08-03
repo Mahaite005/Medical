@@ -102,7 +102,7 @@ export default function Dashboard({ user, onEditProfile, needsPasswordReset }: D
       {/* Main Content */}
       <div className={activeView === 'smartDashboard' ? 'max-w-6xl mx-auto' : 'max-w-md mx-auto p-4'}>
         {activeView === 'smartDashboard' ? (
-          <SmartDashboard user={user} profile={profile} />
+          <SmartDashboard user={user} profile={profile} needsPasswordReset={needsPasswordReset} />
         ) : activeView === 'upload' ? (
           <ImageUpload user={user} />
         ) : activeView === 'history' ? (
