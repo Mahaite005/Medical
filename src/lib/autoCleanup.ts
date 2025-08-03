@@ -2,12 +2,11 @@
 import { supabase } from './supabase'
 import { STORAGE_CONFIG } from './storageConfig'
 
-// دالة لحذف الصور القديمة (أكثر من 5 أيام)
-export async function cleanupOldMedicalImages() {
+// دالة لحذف الصور القديمة (أكثر من 5 أيام) - محسنة
+export async function cleanupOldMedicalImages(dryRun: boolean = false) {
   try {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 بدء عملية تنظيف الصور الطبية القديمة...')
-    }
+    console.log('🔍 بدء عملية تنظيف الصور الطبية القديمة...')
+    console.log(`📋 نمط التشغيل: ${dryRun ? 'محاكاة (لن يتم حذف شيء)' : 'تنفيذ فعلي'}`)
     
     // جلب جميع الملفات من التخزين
     const { data: files, error: listError } = await supabase.storage
@@ -21,37 +20,72 @@ export async function cleanupOldMedicalImages() {
     
     if (!files || files.length === 0) {
       console.log('✅ لا توجد ملفات للتنظيف')
-      return { success: true, deletedCount: 0 }
+      return { success: true, deletedCount: 0, simulationOnly: dryRun }
     }
     
+    // تعيين التاريخ الحد بدقة أكبر (5 أيام = 120 ساعة)
     const fiveDaysAgo = new Date()
-    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5)
+    fiveDaysAgo.setTime(fiveDaysAgo.getTime() - (5 * 24 * 60 * 60 * 1000)) // 5 أيام بالميللي ثانية
+    
+    console.log(`📅 سيتم حذف الملفات الأقدم من: ${fiveDaysAgo.toLocaleString('ar-EG')}`)
+    console.log(`📅 التاريخ الحالي: ${new Date().toLocaleString('ar-EG')}`)
     
     const filesToDelete: string[] = []
+    const fileDetails: Array<{name: string, created: string, size: number, ageInDays: number}> = []
     let totalSizeDeleted = 0
     
     // فحص الملفات التي يزيد عمرها عن 5 أيام
     for (const file of files) {
       if (file.created_at) {
         const fileCreatedAt = new Date(file.created_at)
+        const ageInMs = Date.now() - fileCreatedAt.getTime()
+        const ageInDays = Math.floor(ageInMs / (24 * 60 * 60 * 1000))
         
         if (fileCreatedAt < fiveDaysAgo) {
           filesToDelete.push(file.name)
-          if (file.metadata?.size) {
-            totalSizeDeleted += file.metadata.size
-          }
+          const fileSize = file.metadata?.size || 0
+          totalSizeDeleted += fileSize
+          
+          fileDetails.push({
+            name: file.name,
+            created: fileCreatedAt.toLocaleString('ar-EG'),
+            size: Math.round(fileSize / 1024), // KB
+            ageInDays: ageInDays
+          })
+          
+          console.log(`📄 ملف للحذف: ${file.name} | العمر: ${ageInDays} يوم | الحجم: ${Math.round(fileSize / 1024)} KB`)
         }
       }
     }
     
     if (filesToDelete.length === 0) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('✅ لا توجد ملفات قديمة للحذف')
+      console.log('✅ لا توجد ملفات قديمة للحذف')
+      return { 
+        success: true, 
+        deletedCount: 0, 
+        simulationOnly: dryRun,
+        message: 'لا توجد ملفات تحتاج للحذف' 
       }
-      return { success: true, deletedCount: 0 }
     }
     
-    // هذا مهم - لوج العمليات الحذف دائماً
+    const totalSizeMB = Math.round(totalSizeDeleted / (1024 * 1024) * 100) / 100
+    
+    if (dryRun) {
+      console.log(`🔍 محاكاة: سيتم حذف ${filesToDelete.length} ملف قديم`)
+      console.log(`🔍 محاكاة: سيتم تحرير ${totalSizeMB} MB من المساحة`)
+      
+      return {
+        success: true,
+        deletedCount: 0,
+        simulationOnly: true,
+        potentialDeletions: filesToDelete.length,
+        potentialSpaceFreed: totalSizeMB,
+        fileDetails: fileDetails,
+        message: `تم العثور على ${filesToDelete.length} ملف قديم يمكن حذفها`
+      }
+    }
+    
+    // التنفيذ الفعلي للحذف
     console.log(`🗑️ جاري حذف ${filesToDelete.length} ملف قديم...`)
     
     // حذف الملفات من التخزين
@@ -61,13 +95,11 @@ export async function cleanupOldMedicalImages() {
     
     if (deleteError) {
       console.error('❌ خطأ في حذف الملفات:', deleteError)
-      return { success: false, error: deleteError.message }
+      return { success: false, error: deleteError.message, simulationOnly: false }
     }
     
     // حذف السجلات من قاعدة البيانات
     const deletedRecords = await deleteMedicalTestRecords(filesToDelete)
-    
-    const totalSizeMB = Math.round(totalSizeDeleted / (1024 * 1024) * 100) / 100
     
     console.log(`✅ تم حذف ${filesToDelete.length} ملف بنجاح`)
     console.log(`💾 تم تحرير ${totalSizeMB} MB من المساحة`)
@@ -77,7 +109,10 @@ export async function cleanupOldMedicalImages() {
       success: true,
       deletedCount: filesToDelete.length,
       sizeDeleted: totalSizeMB,
-      recordsDeleted: deletedRecords
+      recordsDeleted: deletedRecords,
+      simulationOnly: false,
+      fileDetails: fileDetails,
+      message: `تم حذف ${filesToDelete.length} ملف بنجاح وتحرير ${totalSizeMB} MB`
     }
     
   } catch (error) {

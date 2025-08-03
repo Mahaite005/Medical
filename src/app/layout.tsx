@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { scheduleAutoCleanup } from '@/lib/autoCleanup'
+// تم إزالة scheduleAutoCleanup لأنه لا يعمل بشكل صحيح في serverless environment
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -59,10 +59,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // تفعيل التنظيف التلقائي (فقط في الخادم)
-  if (typeof window === 'undefined') {
-    scheduleAutoCleanup()
-  }
+  // التنظيف التلقائي الآن يتم عبر API calls وcron jobs
+  // راجع /api/cleanup للتنظيف اليدوي
   
   return (
     <html lang="ar" dir="rtl">

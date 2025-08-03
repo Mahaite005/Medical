@@ -33,30 +33,62 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // تنفيذ عملية التنظيف اليدوية
-    const result = await cleanupOldMedicalImages()
+    // قراءة المعاملات من الطلب (قد يكون فارغ للـ cron jobs)
+    const body = await request.json().catch(() => ({}))
+    const { dryRun = false, confirm = false } = body
+    
+    // تحديد إذا كان الطلب من Vercel cron
+    const isVercelCron = request.headers.get('user-agent')?.includes('vercel-cron') || false
+    
+    // للـ cron jobs، نفذ الحذف الفعلي تلقائياً
+    // للطلبات العادية، إذا لم يتم التأكيد، اجعله dry run
+    const isDryRun = isVercelCron ? false : (dryRun || !confirm)
+    
+    console.log(`🔧 تشغيل API التنظيف - نمط: ${isDryRun ? 'محاكاة' : 'تنفيذ فعلي'}`)
+    console.log(`🤖 مصدر الطلب: ${isVercelCron ? 'Vercel Cron Job' : 'Manual Request'}`)
+    
+    // تنفيذ عملية التنظيف
+    const result = await cleanupOldMedicalImages(isDryRun)
     
     if (!result.success) {
       return NextResponse.json({ 
-        error: result.error || 'فشل في عملية التنظيف' 
+        error: result.error || 'فشل في عملية التنظيف',
+        timestamp: new Date().toISOString()
       }, { status: 500 })
     }
     
+    // تحديد الرسالة بناءً على النمط
+    const message = isDryRun ? 
+      'تم فحص الملفات - لا يتم حذف شيء في نمط المحاكاة' : 
+      'تم التنظيف بنجاح'
+    
     return NextResponse.json({
-      message: 'تم التنظيف بنجاح',
+      message,
       result,
+      simulation: isDryRun,
       info: {
-        deletedFiles: result.deletedCount,
-        freedSpace: `${result.sizeDeleted} MB`,
-        deletedRecords: result.recordsDeleted
+        mode: isDryRun ? 'محاكاة' : 'تنفيذ فعلي',
+        foundFiles: isDryRun ? result.potentialDeletions : result.deletedCount,
+        deletedFiles: result.deletedCount || 0,
+        freedSpace: isDryRun ? 
+          `${result.potentialSpaceFreed || 0} MB (محتمل)` : 
+          `${result.sizeDeleted || 0} MB`,
+        deletedRecords: result.recordsDeleted || 0,
+        fileDetails: result.fileDetails || []
       },
+      instructions: isDryRun ? {
+        next: 'لتنفيذ الحذف الفعلي، أرسل POST request مع { "confirm": true }',
+        warning: 'تأكد من مراجعة قائمة الملفات قبل التأكيد'
+      } : null,
       timestamp: new Date().toISOString()
     })
     
   } catch (error) {
     console.error('Cleanup API error:', error)
     return NextResponse.json({ 
-      error: 'حدث خطأ في الخادم' 
+      error: 'حدث خطأ في الخادم',
+      details: error instanceof Error ? error.message : 'خطأ غير معروف',
+      timestamp: new Date().toISOString()
     }, { status: 500 })
   }
 } 
