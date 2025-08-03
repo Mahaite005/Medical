@@ -1,82 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// إجبار هذا الـ route على أن يكون dynamic لأنه يعتمد على query parameters
+// تكوين شامل لضمان العمل في بيئة serverless
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+export const revalidate = 0
 
 /**
- * هذه النقطة النهائية تعمل كوسيط لعملية إعادة تعيين كلمة المرور
- * تستقبل الطلب من Supabase وتعيد توجيهه إلى صفحة إعادة تعيين كلمة المرور مع الحفاظ على الرموز
+ * Route للتعامل مع callback من Supabase Auth
+ * يدعم تسجيل الدخول وإعادة تعيين كلمة المرور
  */
 export async function GET(request: NextRequest) {
   try {
-    // استخدام nextUrl.searchParams مباشرة لتجنب request.url
-    const searchParams = request.nextUrl.searchParams
+    // استخراج المعاملات مباشرة بدون استخدام searchParams.entries()
+    const { searchParams } = request.nextUrl
     
-    // التحقق من وجود رموز إعادة تعيين كلمة المرور
     const code = searchParams.get('code')
-    const type = searchParams.get('type')
+    const type = searchParams.get('type') 
     const accessToken = searchParams.get('access_token')
     const refreshToken = searchParams.get('refresh_token')
     
-    // سجل المعلمات للتصحيح (في development فقط)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Auth callback received:', {
-        code: code ? 'present' : 'missing',
-        type,
-        accessToken: accessToken ? 'present' : 'missing',
-        refreshToken: refreshToken ? 'present' : 'missing',
-        allParams: Object.fromEntries(searchParams.entries())
-      })
-    }
+    // URL الأساسي للتطبيق
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'
     
-    // إذا كان نوع الطلب هو recovery (إعادة تعيين كلمة المرور)
-    // Supabase قد يرسل إما code أو access_token بناءً على نوع التحقق
+    // في حالة إعادة تعيين كلمة المرور
     if (type === 'recovery' && (code || accessToken)) {
-      // بناء رابط إعادة التوجيه إلى الصفحة الرئيسية مع معلمة تنبيه
-      const dashboardUrl = new URL('/', process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app')
+      const dashboardUrl = new URL('/', baseUrl)
+      dashboardUrl.searchParams.set('reset_password', 'true')
       
-      // إضافة معلمة تدل على ضرورة تغيير كلمة المرور
-      dashboardUrl.searchParams.append('reset_password', 'true')
-      
-      // إضافة المعلمات المطلوبة لإعداد الجلسة إذا كانت موجودة
       if (accessToken) {
-        dashboardUrl.searchParams.append('access_token', accessToken)
+        dashboardUrl.searchParams.set('access_token', accessToken)
       }
       if (refreshToken) {
-        dashboardUrl.searchParams.append('refresh_token', refreshToken)
+        dashboardUrl.searchParams.set('refresh_token', refreshToken)
       }
       if (code) {
-        dashboardUrl.searchParams.append('code', code)
+        dashboardUrl.searchParams.set('code', code)
       }
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Redirecting to dashboard with reset password flag:', dashboardUrl.toString())
-      }
-      
-      // إعادة التوجيه إلى الصفحة الرئيسية مع تنبيه تغيير كلمة المرور
-      return NextResponse.redirect(dashboardUrl)
+      return NextResponse.redirect(dashboardUrl.toString())
     }
     
-    // التحقق من حالة تسجيل الدخول العادي
+    // في حالة تسجيل الدخول العادي
     if (code && !type) {
-      // هذا تسجيل دخول عادي، التوجيه إلى لوحة التحكم
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Regular login callback, redirecting to dashboard')
-      }
-      return NextResponse.redirect(new URL('/', process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'))
+      return NextResponse.redirect(new URL('/', baseUrl))
     }
     
-    // في حالة عدم وجود معلمات صالحة، إعادة التوجيه إلى الصفحة الرئيسية
-    if (process.env.NODE_ENV === 'development') {
-      console.log('No valid auth tokens found, redirecting to home page')
-    }
-    return NextResponse.redirect(new URL('/', process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'))
+    // إعادة توجيه افتراضية للصفحة الرئيسية
+    return NextResponse.redirect(new URL('/', baseUrl))
     
   } catch (error) {
-    console.error('Error in auth callback:', error)
-    
-    // في حالة حدوث خطأ، إعادة التوجيه إلى الصفحة الرئيسية
-    return NextResponse.redirect(new URL('/', process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'))
+    // في حالة حدوث خطأ، العودة للصفحة الرئيسية
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'
+    return NextResponse.redirect(new URL('/', baseUrl))
   }
 }
