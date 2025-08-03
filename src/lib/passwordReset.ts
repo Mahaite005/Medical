@@ -73,14 +73,18 @@ export async function verifyResetCode(email: string, code: string) {
 // Send reset password email using Supabase
 export async function sendResetPasswordEmail(email: string) {
   try {
-    // Always use the production URL for reset password emails
-    const siteUrl = 'https://medicalapp-teal.vercel.app'
-    console.log('🌐 Site URL for password reset:', siteUrl)
+    // استخدام URL من متغيرات البيئة أو fallback للإنتاج
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🌐 Site URL for password reset:', siteUrl)
+    }
     
     // Make sure the redirect URL is absolute and includes the protocol
     // Important: We're using /api/auth/callback as the redirect URL to ensure proper token handling
     const redirectUrl = `${siteUrl}/api/auth/callback`
-    console.log('🔄 Redirect URL:', redirectUrl)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 Redirect URL:', redirectUrl)
+    }
     
     const { data, error } = await supabase.auth.resetPasswordForEmail(
       email.toLowerCase(),
@@ -95,7 +99,9 @@ export async function sendResetPasswordEmail(email: string) {
       throw error
     }
 
-    console.log('✅ Reset password email sent successfully')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ Reset password email sent successfully')
+    }
     return true
   } catch (error) {
     console.error('❌ Error in sendResetPasswordEmail:', error)
@@ -107,7 +113,7 @@ export async function sendResetPasswordEmail(email: string) {
 export async function resetUserPassword(email: string, newPassword: string) {
   try {
     console.log(`🔄 تحديث كلمة المرور لـ: ${email}`)
-    console.log(`🔐 كلمة المرور الجديدة: ${newPassword}`)
+    // تم إزالة console.log لكلمة المرور لأسباب أمنية
     
     // البحث عن المستخدم في قاعدة البيانات أولاً
     const { data: profile, error: profileError } = await supabase
@@ -121,7 +127,9 @@ export async function resetUserPassword(email: string, newPassword: string) {
       throw new Error('البريد الإلكتروني غير مسجل في النظام')
     }
 
-    console.log('✅ تم العثور على الملف الشخصي:', profile.full_name)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ تم العثور على الملف الشخصي:', profile.full_name)
+    }
 
     // استخدام API endpoint الجديد لإعادة تعيين كلمة المرور
     const response = await fetch('/api/password-reset', {
@@ -143,8 +151,10 @@ export async function resetUserPassword(email: string, newPassword: string) {
       throw new Error(result.error || 'فشل في تحديث كلمة المرور')
     }
 
-    console.log('✅ تم تحديث كلمة المرور بنجاح عبر API')
-    console.log('🎉 العملية مكتملة!')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ تم تحديث كلمة المرور بنجاح عبر API')
+      console.log('🎉 العملية مكتملة!')
+    }
 
     return true
   } catch (error) {

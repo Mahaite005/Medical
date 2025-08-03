@@ -12,47 +12,71 @@ function checkRateLimit(ip: string): boolean {
   const record = rateLimitStore.get(ip)
   if (!record || now > record.resetTime) {
     rateLimitStore.set(ip, { count: 1, resetTime: now + windowMs })
-    console.log('Rate limit: New record for IP:', ip)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Rate limit: New record for IP:', ip)
+    }
     return true
   }
 
   if (record.count >= maxRequests) {
-    console.log('Rate limit: Exceeded for IP:', ip, 'Count:', record.count)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Rate limit: Exceeded for IP:', ip, 'Count:', record.count)
+    }
     return false
   }
 
   record.count++
-  console.log('Rate limit: Incremented for IP:', ip, 'Count:', record.count)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Rate limit: Incremented for IP:', ip, 'Count:', record.count)
+  }
   return true
 }
 
-// CSRF protection
+// CSRF protection (محسّن)
 function validateCSRFToken(request: NextRequest): boolean {
   const origin = request.headers.get('origin')
   const referer = request.headers.get('referer')
   
-  console.log('Validating CSRF - Origin:', origin, 'Referer:', referer)
-  
-  // In production, implement proper CSRF token validation
-  // For now, basic origin check
-  if (origin && !origin.includes('localhost') && !origin.includes('medicalapp-teal.vercel.app') && !origin.includes('vercel.app')) {
-    console.log('CSRF validation failed - Origin not allowed:', origin)
-    return false
+  // في development mode فقط، اطبع التفاصيل
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Validating CSRF - Origin:', origin, 'Referer:', referer)
   }
   
-  console.log('CSRF validation passed')
+  // قائمة بالـ domains المسموحة
+  const allowedDomains = [
+    'localhost',
+    '127.0.0.1',
+    'medicalapp-teal.vercel.app',
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/https?:\/\//, '') || ''
+  ].filter(Boolean)
+  
+  // التحقق من الـ origin
+  if (origin) {
+    const isAllowed = allowedDomains.some(domain => origin.includes(domain))
+    if (!isAllowed) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('CSRF validation failed - Origin not allowed:', origin)
+      }
+      return false
+    }
+  }
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('CSRF validation passed')
+  }
   return true
 }
 
 export async function POST(request: NextRequest) {
   let timeoutId: NodeJS.Timeout | undefined;
   try {
-    console.log('Analyze API called');
-    
-    // Log request details for debugging
-    console.log('Request origin:', request.headers.get('origin'));
-    console.log('Request referer:', request.headers.get('referer'));
-    console.log('Request IP:', request.ip || request.headers.get('x-forwarded-for'));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Analyze API called');
+      // Log request details for debugging
+      console.log('Request origin:', request.headers.get('origin'));
+      console.log('Request referer:', request.headers.get('referer'));
+      console.log('Request IP:', request.ip || request.headers.get('x-forwarded-for'));
+    }
     
     // Rate limiting
     const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'

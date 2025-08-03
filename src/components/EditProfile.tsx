@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { Camera, User as UserIcon, Eye, EyeOff } from 'lucide-react';
+import Image from 'next/image';
 
 // قائمة إيموجي احترافية كأفاتار (مزاجية/شخصية)
 const moodAvatars = [
@@ -240,7 +241,7 @@ export default function EditProfile({ user, onProfileUpdated, needsPasswordReset
           {avatar && moodAvatars.includes(avatar) ? (
             <span className="w-24 h-24 rounded-full flex items-center justify-center text-6xl bg-gray-100 border-2 border-primary-600 mx-auto">{avatar}</span>
           ) : avatar ? (
-            <img src={avatar} alt="avatar" className="w-24 h-24 rounded-full object-cover border-2 border-primary-600" />
+            <Image src={avatar} alt="avatar" width={96} height={96} className="w-24 h-24 rounded-full object-cover border-2 border-primary-600" priority={false} />
           ) : (
             <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
               <UserIcon className="w-12 h-12 text-gray-400" />

@@ -17,15 +17,17 @@ export async function middleware(req: NextRequest) {
     res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
     res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
     
-    // Add CSP header for better security
+    // Add CSP header for better security (محسّن)
     res.headers.set('Content-Security-Policy', 
       "default-src 'self'; " +
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline'; " +
-      "style-src 'self' 'unsafe-inline'; " +
-      "img-src 'self' data: https: blob:; " +
-      "font-src 'self'; " +
-      "connect-src 'self' https://*.supabase.co https://generativelanguage.googleapis.com; " +
-      "frame-ancestors 'none';"
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live; " +
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+      "img-src 'self' data: https: blob: https://*.supabase.co; " +
+      "font-src 'self' https://fonts.gstatic.com; " +
+      "connect-src 'self' https://*.supabase.co https://generativelanguage.googleapis.com https://vercel.live; " +
+      "frame-ancestors 'none'; " +
+      "base-uri 'self'; " +
+      "form-action 'self';"
     )
     
     // Protect API routes

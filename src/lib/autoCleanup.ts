@@ -5,7 +5,9 @@ import { STORAGE_CONFIG } from './storageConfig'
 // دالة لحذف الصور القديمة (أكثر من 5 أيام)
 export async function cleanupOldMedicalImages() {
   try {
-    console.log('🔍 بدء عملية تنظيف الصور الطبية القديمة...')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 بدء عملية تنظيف الصور الطبية القديمة...')
+    }
     
     // جلب جميع الملفات من التخزين
     const { data: files, error: listError } = await supabase.storage
@@ -43,10 +45,13 @@ export async function cleanupOldMedicalImages() {
     }
     
     if (filesToDelete.length === 0) {
-      console.log('✅ لا توجد ملفات قديمة للحذف')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ لا توجد ملفات قديمة للحذف')
+      }
       return { success: true, deletedCount: 0 }
     }
     
+    // هذا مهم - لوج العمليات الحذف دائماً
     console.log(`🗑️ جاري حذف ${filesToDelete.length} ملف قديم...`)
     
     // حذف الملفات من التخزين
@@ -167,13 +172,13 @@ export async function getOldFilesStats() {
 export function scheduleAutoCleanup() {
   // تشغيل التنظيف كل 6 ساعات
   setInterval(async () => {
-    console.log('⏰ تشغيل التنظيف التلقائي...')
+    console.log('⏰ تشغيل التنظيف التلقائي...') // مهم للمراقبة
     await cleanupOldMedicalImages()
   }, 6 * 60 * 60 * 1000) // 6 ساعات
   
   // تشغيل التنظيف الأول بعد 10 دقائق
   setTimeout(async () => {
-    console.log('⏰ تشغيل التنظيف الأول...')
+    console.log('⏰ تشغيل التنظيف الأول...') // مهم للمراقبة
     await cleanupOldMedicalImages()
   }, 10 * 60 * 1000) // 10 دقائق
 } 

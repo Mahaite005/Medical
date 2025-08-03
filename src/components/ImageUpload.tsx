@@ -38,11 +38,21 @@ export default function ImageUpload({ user }: ImageUploadProps) {
       }
     }
 
-    // Additional security checks
-    if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\')) {
+    // Additional security checks - مكافحة path traversal
+    if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\') || file.name.includes('<') || file.name.includes('>')) {
       return { 
         isValid: false, 
-        error: 'اسم الملف غير صالح.' 
+        error: 'اسم الملف غير صالح أو يحتوي على أحرف غير مسموحة.' 
+      }
+    }
+
+    // تحقق من امتداد الملف
+    const allowedExtensions = file.type === 'application/pdf' ? ['.pdf'] : ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+    const fileExtension = file.name.toLowerCase().split('.').pop();
+    if (!fileExtension || !allowedExtensions.some(ext => ext === '.' + fileExtension)) {
+      return { 
+        isValid: false, 
+        error: 'امتداد الملف غير مدعوم.' 
       }
     }
 
@@ -114,11 +124,15 @@ export default function ImageUpload({ user }: ImageUploadProps) {
     setError(null)
 
     try {
-      console.log('Starting file analysis...')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Starting file analysis...')
+      }
       
       // Convert file to base64
       const base64 = selectedFile.split(',')[1]
-      console.log('File converted to base64, length:', base64.length)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('File converted to base64, length:', base64.length)
+      }
       
       // Validate base64 data
       if (!base64 || base64.length === 0) {
@@ -128,7 +142,9 @@ export default function ImageUpload({ user }: ImageUploadProps) {
       // First, try to upload file to Supabase storage
       const fileExtension = selectedFileType === 'application/pdf' ? 'pdf' : 'jpg'
       const fileName = `${user.id}/${Date.now()}.${fileExtension}`
-      console.log('Uploading to Supabase storage:', fileName)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Uploading to Supabase storage:', fileName)
+      }
       
       // Convert base64 to blob for upload
       const byteCharacters = atob(base64);
@@ -150,17 +166,19 @@ export default function ImageUpload({ user }: ImageUploadProps) {
         throw new Error('فشل في رفع الملف. تحقق من إعدادات التخزين.')
       }
 
-      console.log('File uploaded successfully:', uploadData)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('File uploaded successfully:', uploadData)
+      }
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('medical-images')
         .getPublicUrl(fileName)
 
-      console.log('Public URL:', publicUrl)
-
-      // Analyze file
-      console.log('Calling analysis API...')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Public URL:', publicUrl)
+        console.log('Calling analysis API...')
+      }
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
@@ -172,7 +190,9 @@ export default function ImageUpload({ user }: ImageUploadProps) {
         }),
       })
 
-      console.log('Analysis API response status:', response.status)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Analysis API response status:', response.status)
+      }
 
       if (!response.ok) {
         let errorMessage = 'فشل في تحليل الملف'
@@ -192,10 +212,10 @@ export default function ImageUpload({ user }: ImageUploadProps) {
       }
 
       const analysis = await response.json()
-      console.log('Analysis completed successfully')
-      
-      // Save to database
-      console.log('Saving to database...')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Analysis completed successfully')
+        console.log('Saving to database...')
+      }
       const { error: dbError } = await supabase
         .from('medical_tests')
         .insert([
@@ -211,9 +231,13 @@ export default function ImageUpload({ user }: ImageUploadProps) {
       if (dbError) {
         console.error('Database error:', dbError)
         // Don't throw error here, just log it - the analysis was successful
-        console.log('Analysis successful but failed to save to database')
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Analysis successful but failed to save to database')
+        }
       } else {
-        console.log('Successfully saved to database')
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Successfully saved to database')
+        }
       }
 
       setResult(analysis.result)
@@ -343,10 +367,14 @@ export default function ImageUpload({ user }: ImageUploadProps) {
             </div>
           ) : (
             <div className="camera-container mb-6">
+              {/* Note: Using <img> instead of Next.js Image for data URLs - this is an exception */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={selectedFile}
                 alt="Medical test preview"
                 className="camera-preview"
+                width="400"
+                height="300"
               />
             </div>
           )}

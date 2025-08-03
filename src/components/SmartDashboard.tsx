@@ -79,7 +79,7 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
   const [showPasswordNotice, setShowPasswordNotice] = useState(false)
 
   // توليد بيانات افتراضية في حالة عدم وجود بيانات حقيقية
-  const generateDefaultHealthData = () => {
+  const generateDefaultHealthData = useCallback(() => {
     const baseMetrics: RealHealthMetric[] = [
       {
         name: 'معدل ضربات القلب',
@@ -120,7 +120,7 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
     ]
 
     setHealthMetrics(baseMetrics)
-  }
+  }, [profile])
 
   // جلب البيانات الصحية الحقيقية  
   const loadRealHealthData = useCallback(async () => {
@@ -143,7 +143,7 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
     } finally {
       setLoading(false)
     }
-  }, [user.id])
+  }, [user.id, generateDefaultHealthData])
 
   // توليد نصائح طبية مخصصة
   const generateTips = useCallback(() => {
