@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cleanupOldMedicalImages, getOldFilesStats } from '@/lib/autoCleanup'
 
+// إجبار هذا الـ route على أن يكون dynamic (مطلوب للـ cron jobs)
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // الحصول على إحصائيات الملفات القديمة

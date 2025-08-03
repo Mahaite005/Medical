@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStorageUsage, STORAGE_CONFIG } from '@/lib/storageConfig'
 
+// إجبار هذا الـ route على أن يكون dynamic (يتعامل مع real-time data)
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // Get storage usage

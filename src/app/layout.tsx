@@ -1,11 +1,21 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 // تم إزالة scheduleAutoCleanup لأنه لا يعمل بشكل صحيح في serverless environment
 
 const inter = Inter({ subsets: ['latin'] })
 
+// إعدادات Viewport منفصلة (Next.js 14+ requirement)
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#3b82f6'
+}
+
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'),
   title: {
     default: 'المختبر الرقمي - تحليل الفحوصات الطبية بالذكاء الاصطناعي',
     template: '%s | المختبر الرقمي'
@@ -16,8 +26,6 @@ export const metadata: Metadata = {
   creator: 'المختبر الرقمي',
   publisher: 'المختبر الرقمي',
   robots: 'index, follow',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
-  themeColor: '#3b82f6',
   manifest: '/manifest.json',
   
   // Open Graph
@@ -65,7 +73,6 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
