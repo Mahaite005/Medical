@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     siteName: 'المختبر الرقمي',
     images: [
       {
-        url: '/icon-192x192.png',
+        url: '/lab-icon-192.svg',
         width: 192,
         height: 192,
         alt: 'المختبر الرقمي'
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'المختبر الرقمي - تحليل الفحوصات الطبية بالذكاء الاصطناعي',
     description: 'منصة رقمية متطورة لتحليل نتائج الفحوصات والتحاليل الطبية باستخدام الذكاء الاصطناعي',
-    images: ['/icon-192x192.png']
+            images: ['/lab-icon-192.svg']
   },
   
   // App Links
@@ -86,11 +86,11 @@ export default function RootLayout({
         <meta name="target" content="all" />
         
         {/* Icons and App Integration */}
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <link rel="apple-touch-icon" href="/lab-icon-192.svg" />
         <link rel="icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
+        <link rel="icon" type="image/svg+xml" sizes="192x192" href="/lab-icon-192.svg" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
-        <link rel="mask-icon" href="/icon-192x192.png" color="#3b82f6" />
+        <link rel="mask-icon" href="/lab-icon-192.svg" color="#3b82f6" />
         
         {/* Preconnect to external domains for better performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

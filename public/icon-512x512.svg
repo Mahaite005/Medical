@@ -1,0 +1,118 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with Medical Gradient -->
+  <rect width="512" height="512" rx="75" fill="url(#medicalGradient)"/>
+  
+  <!-- Background Pattern -->
+  <circle cx="107" cy="107" r="53" fill="url(#accentGradient)" opacity="0.1"/>
+  <circle cx="405" cy="405" r="67" fill="url(#accentGradient)" opacity="0.08"/>
+  
+  <!-- Microscope Base -->
+  <rect x="186" y="373" width="139" height="32" rx="16" fill="url(#metalGradient)"/>
+  <rect x="213" y="347" width="85" height="32" rx="16" fill="url(#metalGradient)"/>
+  
+  <!-- Microscope Stand -->
+  <rect x="235" y="213" width="42" height="139" rx="21" fill="url(#metalGradient)"/>
+  
+  <!-- Microscope Lens System -->
+  <circle cx="256" cy="200" r="48" fill="url(#lensGradient)" stroke="url(#metalGradient)" stroke-width="8"/>
+  <circle cx="256" cy="200" r="32" fill="url(#glassGradient)"/>
+  <circle cx="256" cy="200" r="16" fill="rgba(255,255,255,0.9)"/>
+  
+  <!-- Microscope Eyepiece -->
+  <rect x="235" y="120" width="42" height="53" rx="21" fill="url(#metalGradient)"/>
+  <ellipse cx="256" cy="133" rx="16" ry="11" fill="rgba(0,0,0,0.8)"/>
+  
+  <!-- Test Tubes Container -->
+  <rect x="347" y="267" width="93" height="120" rx="21" fill="url(#containerGradient)" opacity="0.9"/>
+  
+  <!-- Test Tubes -->
+  <rect x="360" y="280" width="16" height="93" rx="8" fill="url(#tubeGradient1)"/>
+  <rect x="387" y="280" width="16" height="93" rx="8" fill="url(#tubeGradient2)"/>
+  <rect x="413" y="280" width="16" height="93" rx="8" fill="url(#tubeGradient3)"/>
+  
+  <!-- Liquid in Test Tubes -->
+  <rect x="362" y="333" width="11" height="37" rx="5" fill="#ff6b6b" opacity="0.8"/>
+  <rect x="389" y="320" width="11" height="51" rx="5" fill="#4ecdc4" opacity="0.8"/>
+  <rect x="415" y="307" width="11" height="64" rx="5" fill="#45b7d1" opacity="0.8"/>
+  
+  <!-- DNA Helix -->
+  <path d="M107 213 Q133 187, 160 213 Q133 240, 107 267" stroke="rgba(255,255,255,0.6)" stroke-width="5" fill="none"/>
+  <path d="M107 267 Q133 293, 160 267 Q133 240, 107 213" stroke="rgba(255,255,255,0.4)" stroke-width="5" fill="none"/>
+  <circle cx="120" cy="227" r="4" fill="rgba(255,255,255,0.8)"/>
+  <circle cx="147" cy="227" r="4" fill="rgba(255,255,255,0.8)"/>
+  <circle cx="120" cy="253" r="4" fill="rgba(255,255,255,0.8)"/>
+  <circle cx="147" cy="253" r="4" fill="rgba(255,255,255,0.8)"/>
+  
+  <!-- Digital Data Points -->
+  <circle cx="400" cy="160" r="8" fill="rgba(255,255,255,0.9)"/>
+  <circle cx="427" cy="187" r="5" fill="rgba(255,255,255,0.7)"/>
+  <circle cx="453" cy="213" r="7" fill="rgba(255,255,255,0.8)"/>
+  
+  <!-- Connection Lines -->
+  <line x1="400" y1="160" x2="427" y2="187" stroke="rgba(255,255,255,0.5)" stroke-width="3"/>
+  <line x1="427" y1="187" x2="453" y2="213" stroke="rgba(255,255,255,0.5)" stroke-width="3"/>
+  
+  <!-- Medical Plus Symbol (subtle) -->
+  <rect x="69" y="413" width="32" height="8" rx="4" fill="rgba(255,255,255,0.6)"/>
+  <rect x="81" y="401" width="8" height="32" rx="4" fill="rgba(255,255,255,0.6)"/>
+  
+  <!-- Analysis Wave -->
+  <path d="M53 80 Q80 67, 107 80 Q133 93, 160 80" stroke="rgba(255,255,255,0.4)" stroke-width="5" fill="none"/>
+  
+  <defs>
+    <!-- Medical Blue to Teal Gradient -->
+    <linearGradient id="medicalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#0891b2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Accent Gradient -->
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#34d399;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Metal Gradient for Microscope -->
+    <linearGradient id="metalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8fafc;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#e2e8f0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#cbd5e1;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Lens Gradient -->
+    <linearGradient id="lensGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#475569;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Glass Gradient -->
+    <radialGradient id="glassGradient" cx="30%" cy="30%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.8" />
+      <stop offset="70%" style="stop-color:#e0f2fe;stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:#0891b2;stop-opacity:0.6" />
+    </radialGradient>
+    
+    <!-- Container Gradient -->
+    <linearGradient id="containerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#f1f5f9;stop-opacity:0.7" />
+    </linearGradient>
+    
+    <!-- Test Tube Gradients -->
+    <linearGradient id="tubeGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fef3c7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0.8" />
+    </linearGradient>
+    
+    <linearGradient id="tubeGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ecfdf5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:0.8" />
+    </linearGradient>
+    
+    <linearGradient id="tubeGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#eff6ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0.8" />
+    </linearGradient>
+  </defs>
+</svg>

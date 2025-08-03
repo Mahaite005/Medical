@@ -444,10 +444,10 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
                     📍 <span className="font-bold">الخطوات المطلوبة:</span>
                   </p>
                   <ol className="list-decimal list-inside text-sm text-orange-800 mt-2 space-y-1">
-                    <li>اذهب إلى قسم <span className="bg-orange-200 px-1 rounded font-bold">"تعديل الملف الشخصي"</span> بالأسفل</li>
-                    <li>ستجد خانة <span className="bg-orange-200 px-1 rounded font-bold">"تعيين كلمة المرور الجديدة"</span></li>
+                    <li>اذهب إلى قسم <span className="bg-orange-200 px-1 rounded font-bold">&quot;تعديل الملف الشخصي&quot;</span> بالأسفل</li>
+                    <li>ستجد خانة <span className="bg-orange-200 px-1 rounded font-bold">&quot;تعيين كلمة المرور الجديدة&quot;</span></li>
                     <li>أدخل كلمة مرور جديدة وقوية (8 أحرف على الأقل)</li>
-                    <li>اضغط على "تحديث كلمة المرور"</li>
+                    <li>اضغط على &quot;تحديث كلمة المرور&quot;</li>
                   </ol>
                 </div>
                 <p className="text-xs text-orange-700">

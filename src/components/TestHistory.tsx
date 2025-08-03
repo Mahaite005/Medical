@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { Calendar, FileText, Eye, Download } from 'lucide-react'
+import Image from 'next/image'
 
 interface TestHistoryProps {
   user: User
@@ -158,10 +159,13 @@ export default function TestHistory({ user }: TestHistoryProps) {
             <div className="p-4">
               {/* Image */}
               <div className="mb-6">
-                <img
+                <Image
                   src={selectedTest.image_url}
                   alt="Medical test"
+                  width={400}
+                  height={192}
                   className="w-full h-48 object-cover rounded-lg border"
+                  priority={false}
                 />
               </div>
 
