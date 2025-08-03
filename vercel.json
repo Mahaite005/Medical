@@ -1,13 +1,28 @@
 {
+  "functions": {
+    "src/app/api/auth/callback/route.ts": {
+      "runtime": "nodejs18.x"
+    },
+    "src/app/api/analyze/route.ts": {
+      "runtime": "nodejs18.x"
+    },
+    "src/app/api/cleanup/route.ts": {
+      "runtime": "nodejs18.x"
+    },
+    "src/app/api/password-reset/route.ts": {
+      "runtime": "nodejs18.x"
+    },
+    "src/app/api/debug-env/route.ts": {
+      "runtime": "nodejs18.x"
+    },
+    "src/app/api/storage-usage/route.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "crons": [
     {
       "path": "/api/cleanup",
       "schedule": "0 */6 * * *"
     }
-  ],
-  "functions": {
-    "src/app/api/**/*.ts": {
-      "maxDuration": 60
-    }
-  }
+  ]
 }

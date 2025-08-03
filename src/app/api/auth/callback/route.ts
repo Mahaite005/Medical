@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // إجبار هذا الـ route على أن يكون dynamic لأنه يعتمد على query parameters
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 /**
  * هذه النقطة النهائية تعمل كوسيط لعملية إعادة تعيين كلمة المرور
@@ -9,8 +10,8 @@ export const dynamic = 'force-dynamic'
  */
 export async function GET(request: NextRequest) {
   try {
-    // استخدام nextUrl بدلاً من request.url لتجنب dynamic server usage
-    const { searchParams } = request.nextUrl
+    // استخدام nextUrl.searchParams مباشرة لتجنب request.url
+    const searchParams = request.nextUrl.searchParams
     
     // التحقق من وجود رموز إعادة تعيين كلمة المرور
     const code = searchParams.get('code')
