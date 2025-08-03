@@ -26,13 +26,13 @@ export default function Home() {
         const code = urlParams.get('code')
 
         if (resetPassword === 'true') {
-          console.log('Password reset flow detected')
+          console.log('🔑 Password reset flow detected, setting needsPasswordReset to true')
           setIsPasswordResetFlow(true)
           setNeedsPasswordReset(true)
 
           // Set session with tokens if available
           if (accessToken && refreshToken) {
-            console.log('Setting session with access token')
+            console.log('🔐 Setting session with access token')
             const { data, error } = await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken
@@ -40,17 +40,23 @@ export default function Home() {
             
             if (!error && data.session) {
               setUser(data.session.user)
+              console.log('✅ User session set successfully:', data.session.user.email)
               // Clean URL without reloading
               window.history.replaceState({}, '', window.location.pathname)
+            } else {
+              console.error('❌ Failed to set session:', error)
             }
           } else if (code) {
-            console.log('Exchanging code for session')
+            console.log('🔄 Exchanging code for session')
             const { data, error } = await supabase.auth.exchangeCodeForSession(code)
             
             if (!error && data.session) {
               setUser(data.session.user)
+              console.log('✅ Session exchange successful:', data.session.user.email)
               // Clean URL without reloading
               window.history.replaceState({}, '', window.location.pathname)
+            } else {
+              console.error('❌ Failed to exchange code:', error)
             }
           }
           
@@ -107,6 +113,21 @@ export default function Home() {
           onEditProfile={() => setShowEditProfile(true)}
           needsPasswordReset={needsPasswordReset}
         />
+      )}
+      
+      {/* مؤقت: زر اختبار لتفعيل needsPasswordReset */}
+      {process.env.NODE_ENV === 'development' && user && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <button
+            onClick={() => {
+              console.log('🧪 Manual test: Setting needsPasswordReset to true')
+              setNeedsPasswordReset(true)
+            }}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm shadow-lg hover:bg-purple-700"
+          >
+            🧪 Test Password Reset
+          </button>
+        </div>
       )}
     </main>
   )

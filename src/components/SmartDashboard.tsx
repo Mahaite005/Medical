@@ -77,6 +77,10 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
   const [analyzing, setAnalyzing] = useState(false)
   const [showManualInput, setShowManualInput] = useState(false)
   const [showPasswordNotice, setShowPasswordNotice] = useState(false)
+  
+  // تتبع needsPasswordReset
+  console.log('🏠 SmartDashboard: needsPasswordReset =', needsPasswordReset)
+  console.log('🏠 SmartDashboard: showPasswordNotice =', showPasswordNotice)
 
   useEffect(() => {
     loadRealHealthData()
@@ -91,24 +95,37 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
 
   // إدارة ملاحظة تغيير كلمة المرور
   useEffect(() => {
+    console.log('🔄 SmartDashboard useEffect triggered: needsPasswordReset =', needsPasswordReset)
+    
     if (needsPasswordReset) {
+      console.log('✅ needsPasswordReset is true, processing...')
+      
       // التحقق من localStorage لمعرفة آخر مرة تم إخفاء الملاحظة
       const lastHidden = localStorage.getItem(`password-notice-hidden-${user.id}`)
+      console.log('📦 localStorage lastHidden:', lastHidden)
       
       if (lastHidden) {
         const hiddenTime = new Date(lastHidden)
         const now = new Date()
         const diffMinutes = (now.getTime() - hiddenTime.getTime()) / (1000 * 60)
+        console.log('⏰ Minutes since hidden:', diffMinutes)
         
         // إذا مر أكثر من 15 دقيقة، اعرض الملاحظة مرة أخرى
         if (diffMinutes > 15) {
+          console.log('🔄 15+ minutes passed, showing notice again')
           setShowPasswordNotice(true)
           localStorage.removeItem(`password-notice-hidden-${user.id}`)
+        } else {
+          console.log('⏱️ Less than 15 minutes, keeping notice hidden')
         }
       } else {
+        console.log('🆕 First time, showing notice')
         // أول مرة، اعرض الملاحظة
         setShowPasswordNotice(true)
       }
+    } else {
+      console.log('❌ needsPasswordReset is false, hiding notice')
+      setShowPasswordNotice(false)
     }
   }, [needsPasswordReset, user.id])
 

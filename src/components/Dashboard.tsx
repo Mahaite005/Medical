@@ -20,6 +20,9 @@ type ActiveView = 'upload' | 'history' | 'editProfile' | 'smartDashboard'
 export default function Dashboard({ user, onEditProfile, needsPasswordReset }: DashboardProps) {
   const [activeView, setActiveView] = useState<ActiveView>('smartDashboard')
   const [profile, setProfile] = useState<any>(null)
+  
+  // تتبع needsPasswordReset
+  console.log('📊 Dashboard: needsPasswordReset =', needsPasswordReset)
 
   useEffect(() => {
     const fetchProfile = async () => {

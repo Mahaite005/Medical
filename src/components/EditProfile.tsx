@@ -163,37 +163,57 @@ export default function EditProfile({ user, onProfileUpdated, needsPasswordReset
   // تحديث كلمة المرور
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🔒 Starting password update process...');
+    
     setPasswordError('');
     setPasswordSuccess('');
     
     // التحقق من صحة كلمة المرور
     if (newPassword.length < 8) {
+      console.log('❌ Password too short');
       setPasswordError('كلمة المرور يجب أن تكون 8 أحرف على الأقل');
       return;
     }
     
     if (newPassword !== confirmPassword) {
+      console.log('❌ Passwords do not match');
       setPasswordError('كلمتا المرور غير متطابقتين');
       return;
     }
     
     setUpdatingPassword(true);
+    console.log('🔄 Calling supabase.auth.updateUser...');
     
     try {
-      const { error } = await supabase.auth.updateUser({ 
+      // الحصول على المستخدم الحالي أولاً
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      console.log('👤 Current user:', currentUser?.email);
+      
+      if (!currentUser) {
+        console.error('❌ No current user found');
+        setPasswordError('لم يتم العثور على المستخدم. يرجى تسجيل الدخول مرة أخرى.');
+        setUpdatingPassword(false);
+        return;
+      }
+      
+      const { data, error } = await supabase.auth.updateUser({ 
         password: newPassword 
       });
       
+      console.log('📝 Update response:', { data, error });
+      
       if (error) {
-        console.error('Password update error:', error);
+        console.error('❌ Password update error:', error);
         setPasswordError(error.message || 'حدث خطأ أثناء تحديث كلمة المرور');
       } else {
+        console.log('✅ Password updated successfully!');
         setPasswordSuccess('تم تحديث كلمة المرور بنجاح!');
         setNewPassword('');
         setConfirmPassword('');
         
         // إشعار بانتهاء عملية إعادة تعيين كلمة المرور
         if (onPasswordResetComplete) {
+          console.log('🔄 Calling onPasswordResetComplete...');
           onPasswordResetComplete();
         }
         
@@ -203,17 +223,19 @@ export default function EditProfile({ user, onProfileUpdated, needsPasswordReset
         }, 3000);
       }
     } catch (error) {
-      console.error('Unexpected error:', error);
+      console.error('❌ Unexpected error:', error);
       setPasswordError('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
     }
     
     setUpdatingPassword(false);
+    console.log('🏁 Password update process completed');
   };
 
   if (loading) return <div className="text-center py-8">جاري تحميل البيانات...</div>;
 
   return (
-    <form onSubmit={handleSave} className="max-w-xl mx-auto bg-white rounded-2xl shadow-lg p-6 mt-8">
+    <>
+      <form onSubmit={handleSave} className="max-w-xl mx-auto bg-white rounded-2xl shadow-lg p-6 mt-8">
       <div className="flex items-center mb-4">
         <button
           type="button"
@@ -334,92 +356,93 @@ export default function EditProfile({ user, onProfileUpdated, needsPasswordReset
       {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-4 text-red-600">{error}</div>}
       {success && <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4 text-green-600">{success}</div>}
       <button type="submit" disabled={saving} className="w-full bg-primary-600 text-white py-3 rounded-lg font-medium mt-6 hover:bg-primary-700 disabled:opacity-50">{saving ? 'جاري الحفظ...' : 'حفظ التعديلات'}</button>
+    </form>
+    
+    {/* قسم تغيير كلمة المرور - Form منفصل */}
+    <div className={`mt-8 pt-6 border-t-2 ${needsPasswordReset ? 'border-orange-300 bg-orange-50' : 'border-gray-200'} ${needsPasswordReset ? 'rounded-lg p-4' : ''}`}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className={`text-lg font-semibold ${needsPasswordReset ? 'text-orange-900' : 'text-gray-900'}`}>
+          🔐 تغيير كلمة المرور
+          {needsPasswordReset && <span className="animate-pulse"> (مطلوب)</span>}
+        </h3>
+        {needsPasswordReset && (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300 animate-bounce">
+            ⚠️ مطلوب فوراً
+          </span>
+        )}
+      </div>
       
-      {/* قسم تغيير كلمة المرور */}
-      <div className={`mt-8 pt-6 border-t-2 ${needsPasswordReset ? 'border-orange-300 bg-orange-50' : 'border-gray-200'} ${needsPasswordReset ? 'rounded-lg p-4' : ''}`}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className={`text-lg font-semibold ${needsPasswordReset ? 'text-orange-900' : 'text-gray-900'}`}>
-            🔐 تغيير كلمة المرور
-            {needsPasswordReset && <span className="animate-pulse"> (مطلوب)</span>}
-          </h3>
-          {needsPasswordReset && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300 animate-bounce">
-              ⚠️ مطلوب فوراً
-            </span>
-          )}
+      {needsPasswordReset && (
+        <div className="mb-6 p-4 bg-gradient-to-r from-orange-100 to-red-100 border-l-4 border-orange-400 rounded-lg shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-8 h-8 bg-orange-200 rounded-full flex items-center justify-center">
+              <span className="text-orange-700 text-lg">🔒</span>
+            </div>
+            <div>
+              <p className="text-sm text-orange-900 font-bold mb-2">
+                مطلوب إعادة تعيين كلمة المرور
+              </p>
+              <p className="text-xs text-orange-800 leading-relaxed">
+                تم طلب إعادة تعيين كلمة المرور لحسابك من خلال البريد الإلكتروني.
+                يرجى إدخال كلمة مرور جديدة وقوية أدناه لضمان أمان حسابك وحماية بياناتك الطبية.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <form onSubmit={handlePasswordUpdate} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            كلمة المرور الجديدة
+          </label>
+          <input 
+            type="password" 
+            className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
+            value={newPassword} 
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="أدخل كلمة المرور الجديدة (8 أحرف على الأقل)"
+            minLength={8}
+            required 
+          />
         </div>
         
-        {needsPasswordReset && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-orange-100 to-red-100 border-l-4 border-orange-400 rounded-lg shadow-sm">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-orange-200 rounded-full flex items-center justify-center">
-                <span className="text-orange-700 text-lg">🔒</span>
-              </div>
-              <div>
-                <p className="text-sm text-orange-900 font-bold mb-2">
-                  مطلوب إعادة تعيين كلمة المرور
-                </p>
-                <p className="text-xs text-orange-800 leading-relaxed">
-                  تم طلب إعادة تعيين كلمة المرور لحسابك من خلال البريد الإلكتروني.
-                  يرجى إدخال كلمة مرور جديدة وقوية أدناه لضمان أمان حسابك وحماية بياناتك الطبية.
-                </p>
-              </div>
-            </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            تأكيد كلمة المرور الجديدة
+          </label>
+          <input 
+            type="password" 
+            className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
+            value={confirmPassword} 
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="أعد إدخال كلمة المرور الجديدة"
+            minLength={8}
+            required 
+          />
+        </div>
+        
+        {passwordError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-red-600 text-sm">{passwordError}</p>
           </div>
         )}
         
-        <form onSubmit={handlePasswordUpdate} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              كلمة المرور الجديدة
-            </label>
-            <input 
-              type="password" 
-              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
-              value={newPassword} 
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="أدخل كلمة المرور الجديدة (8 أحرف على الأقل)"
-              minLength={8}
-              required 
-            />
+        {passwordSuccess && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <p className="text-green-600 text-sm">{passwordSuccess}</p>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              تأكيد كلمة المرور الجديدة
-            </label>
-            <input 
-              type="password" 
-              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
-              value={confirmPassword} 
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="أعد إدخال كلمة المرور الجديدة"
-              minLength={8}
-              required 
-            />
-          </div>
-          
-          {passwordError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-600 text-sm">{passwordError}</p>
-            </div>
-          )}
-          
-          {passwordSuccess && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <p className="text-green-600 text-sm">{passwordSuccess}</p>
-            </div>
-          )}
-          
-          <button 
-            type="submit" 
-            disabled={updatingPassword || !newPassword || !confirmPassword}
-            className="w-full bg-orange-600 text-white py-3 rounded-lg font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {updatingPassword ? 'جاري تحديث كلمة المرور...' : 'تحديث كلمة المرور'}
-          </button>
-        </form>
-      </div>
-    </form>
+        )}
+        
+        <button 
+          type="submit" 
+          disabled={updatingPassword || !newPassword || !confirmPassword}
+          className="w-full bg-orange-600 text-white py-3 rounded-lg font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {updatingPassword ? 'جاري تحديث كلمة المرور...' : 'تحديث كلمة المرور'}
+        </button>
+      </form>
+    </div>
+    </>
   );
 } 
