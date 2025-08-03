@@ -15,16 +15,22 @@ export default function Header({ user, profile, onLogout, needsPasswordReset }: 
     <header className="bg-white shadow-sm border-b border-gray-200">
       {/* رسالة تنبيه تغيير كلمة المرور */}
       {needsPasswordReset && (
-        <div className="bg-orange-50 border-b border-orange-200">
-          <div className="max-w-md mx-auto px-4 py-3">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm text-orange-800 font-medium">
-                  مطلوب تغيير كلمة المرور
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 border-b border-orange-200 shadow-sm">
+          <div className="max-w-md mx-auto px-4 py-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-orange-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-orange-900 font-bold mb-1">
+                  🔐 مطلوب تغيير كلمة المرور فوراً
                 </p>
-                <p className="text-xs text-orange-700 mt-1">
-                  يرجى تحديث كلمة المرور من قسم تعديل الملف الشخصي لضمان أمان حسابك
+                <p className="text-xs text-orange-800 leading-relaxed">
+                  تم طلب إعادة تعيين كلمة المرور لحسابك.
+                  <br />
+                  <span className="font-semibold">الخطوة التالية:</span> اذهب إلى 
+                  <span className="bg-orange-200 px-1 rounded mx-1 font-bold">"تعديل الملف الشخصي"</span>
+                  وقم بتحديث كلمة المرور في القسم السفلي.
                 </p>
               </div>
             </div>

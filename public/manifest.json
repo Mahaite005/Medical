@@ -1,39 +1,32 @@
 {
-  "name": "تحليل طبي",
+  "name": "تطبيق التحليل الطبي",
   "short_name": "تحليل طبي",
-  "description": "تطبيق ويب حديث لتحليل نتائج الفحوصات الطبية بدقة عالية",
+  "description": "تطبيق ويب حديث لتحليل نتائج الفحوصات الطبية بدقة عالية باستخدام الذكاء الاصطناعي",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3b82f6",
   "orientation": "portrait",
+  "lang": "ar",
+  "dir": "rtl",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/5394/5394269.png",
+      "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/5394/5394269.png",
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    }
-  ],
-  "categories": ["medical", "health", "productivity"],
-  "screenshots": [
-    {
-      "src": "/screenshot1.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide"
     },
     {
-      "src": "/screenshot2.png",
-      "sizes": "750x1334",
-      "type": "image/png",
-      "form_factor": "narrow"
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
     }
-  ]
+  ],
+  "categories": ["medical", "health", "productivity", "utilities"]
 } 

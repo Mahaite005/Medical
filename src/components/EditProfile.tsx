@@ -336,23 +336,35 @@ export default function EditProfile({ user, onProfileUpdated, needsPasswordReset
       <button type="submit" disabled={saving} className="w-full bg-primary-600 text-white py-3 rounded-lg font-medium mt-6 hover:bg-primary-700 disabled:opacity-50">{saving ? 'جاري الحفظ...' : 'حفظ التعديلات'}</button>
       
       {/* قسم تغيير كلمة المرور */}
-      <div className="mt-8 pt-6 border-t border-gray-200">
+      <div className={`mt-8 pt-6 border-t-2 ${needsPasswordReset ? 'border-orange-300 bg-orange-50' : 'border-gray-200'} ${needsPasswordReset ? 'rounded-lg p-4' : ''}`}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
-            تغيير كلمة المرور
+          <h3 className={`text-lg font-semibold ${needsPasswordReset ? 'text-orange-900' : 'text-gray-900'}`}>
+            🔐 تغيير كلمة المرور
+            {needsPasswordReset && <span className="animate-pulse"> (مطلوب)</span>}
           </h3>
           {needsPasswordReset && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-              مطلوب
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300 animate-bounce">
+              ⚠️ مطلوب فوراً
             </span>
           )}
         </div>
         
         {needsPasswordReset && (
-          <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-            <p className="text-sm text-orange-800">
-              🔐 تم طلب إعادة تعيين كلمة المرور لحسابك. يرجى إدخال كلمة مرور جديدة أدناه لضمان أمان حسابك.
-            </p>
+          <div className="mb-6 p-4 bg-gradient-to-r from-orange-100 to-red-100 border-l-4 border-orange-400 rounded-lg shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-orange-200 rounded-full flex items-center justify-center">
+                <span className="text-orange-700 text-lg">🔒</span>
+              </div>
+              <div>
+                <p className="text-sm text-orange-900 font-bold mb-2">
+                  مطلوب إعادة تعيين كلمة المرور
+                </p>
+                <p className="text-xs text-orange-800 leading-relaxed">
+                  تم طلب إعادة تعيين كلمة المرور لحسابك من خلال البريد الإلكتروني.
+                  يرجى إدخال كلمة مرور جديدة وقوية أدناه لضمان أمان حسابك وحماية بياناتك الطبية.
+                </p>
+              </div>
+            </div>
           </div>
         )}
         

@@ -27,11 +27,14 @@ export default function RootLayout({
     <html lang="ar" dir="rtl">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="تطبيق الذكاء الاصطناعي الطبي" />
-        <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5394/5394269.png" />
-        <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/5394/5394269.png" />
+        <meta name="apple-mobile-web-app-title" content="تطبيق التحليل الطبي" />
+        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
       </head>
       <body className={`min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 ${inter.className}`}>
         <div className="min-h-screen flex flex-col">
