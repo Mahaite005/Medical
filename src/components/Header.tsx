@@ -11,9 +11,6 @@ interface HeaderProps {
 }
 
 export default function Header({ user, profile, onLogout, needsPasswordReset }: HeaderProps) {
-  // تتبع needsPasswordReset
-  console.log('🎯 Header: needsPasswordReset =', needsPasswordReset)
-  
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
       {/* رسالة تنبيه تغيير كلمة المرور */}

@@ -163,57 +163,46 @@ export default function EditProfile({ user, onProfileUpdated, needsPasswordReset
   // تحديث كلمة المرور
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🔒 Starting password update process...');
     
     setPasswordError('');
     setPasswordSuccess('');
     
     // التحقق من صحة كلمة المرور
     if (newPassword.length < 8) {
-      console.log('❌ Password too short');
       setPasswordError('كلمة المرور يجب أن تكون 8 أحرف على الأقل');
       return;
     }
     
     if (newPassword !== confirmPassword) {
-      console.log('❌ Passwords do not match');
       setPasswordError('كلمتا المرور غير متطابقتين');
       return;
     }
     
     setUpdatingPassword(true);
-    console.log('🔄 Calling supabase.auth.updateUser...');
     
     try {
       // الحصول على المستخدم الحالي أولاً
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      console.log('👤 Current user:', currentUser?.email);
       
       if (!currentUser) {
-        console.error('❌ No current user found');
         setPasswordError('لم يتم العثور على المستخدم. يرجى تسجيل الدخول مرة أخرى.');
         setUpdatingPassword(false);
         return;
       }
       
-      const { data, error } = await supabase.auth.updateUser({ 
+      const { error } = await supabase.auth.updateUser({ 
         password: newPassword 
       });
       
-      console.log('📝 Update response:', { data, error });
-      
       if (error) {
-        console.error('❌ Password update error:', error);
         setPasswordError(error.message || 'حدث خطأ أثناء تحديث كلمة المرور');
       } else {
-        console.log('✅ Password updated successfully!');
         setPasswordSuccess('تم تحديث كلمة المرور بنجاح!');
         setNewPassword('');
         setConfirmPassword('');
         
         // إشعار بانتهاء عملية إعادة تعيين كلمة المرور
         if (onPasswordResetComplete) {
-          console.log('🔄 Calling onPasswordResetComplete...');
           onPasswordResetComplete();
         }
         
@@ -223,12 +212,10 @@ export default function EditProfile({ user, onProfileUpdated, needsPasswordReset
         }, 3000);
       }
     } catch (error) {
-      console.error('❌ Unexpected error:', error);
       setPasswordError('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
     }
     
     setUpdatingPassword(false);
-    console.log('🏁 Password update process completed');
   };
 
   if (loading) return <div className="text-center py-8">جاري تحميل البيانات...</div>;
@@ -391,56 +378,135 @@ export default function EditProfile({ user, onProfileUpdated, needsPasswordReset
         </div>
       )}
       
-      <form onSubmit={handlePasswordUpdate} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+      <form onSubmit={handlePasswordUpdate} className="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        {/* حقل كلمة المرور الجديدة */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-2">
+            <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs">🔑</span>
+            </div>
             كلمة المرور الجديدة
           </label>
-          <input 
-            type="password" 
-            className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
-            value={newPassword} 
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="أدخل كلمة المرور الجديدة (8 أحرف على الأقل)"
-            minLength={8}
-            required 
-          />
+          <div className="relative">
+            <input 
+              type="password" 
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 text-sm placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-gray-300" 
+              value={newPassword} 
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="أدخل كلمة المرور الجديدة (8 أحرف على الأقل)"
+              minLength={8}
+              required 
+            />
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+              <div className="w-5 h-5 text-gray-400">
+                🔒
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+            <span className="w-3 h-3 text-gray-400">ℹ️</span>
+            يجب أن تحتوي على 8 أحرف على الأقل
+          </p>
         </div>
         
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        {/* حقل تأكيد كلمة المرور */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-2">
+            <div className="w-5 h-5 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs">✓</span>
+            </div>
             تأكيد كلمة المرور الجديدة
           </label>
-          <input 
-            type="password" 
-            className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
-            value={confirmPassword} 
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="أعد إدخال كلمة المرور الجديدة"
-            minLength={8}
-            required 
-          />
+          <div className="relative">
+            <input 
+              type="password" 
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 text-sm placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 shadow-sm hover:border-gray-300" 
+              value={confirmPassword} 
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="أعد إدخال كلمة المرور للتأكيد"
+              minLength={8}
+              required 
+            />
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+              <div className="w-5 h-5 text-gray-400">
+                🔐
+              </div>
+            </div>
+          </div>
+          {confirmPassword && newPassword && (
+            <p className={`text-xs mt-1 flex items-center gap-1 ${newPassword === confirmPassword ? 'text-green-600' : 'text-red-500'}`}>
+              <span className="w-3 h-3">{newPassword === confirmPassword ? '✅' : '❌'}</span>
+              {newPassword === confirmPassword ? 'كلمتا المرور متطابقتان' : 'كلمتا المرور غير متطابقتان'}
+            </p>
+          )}
         </div>
         
+        {/* رسائل الخطأ والنجاح */}
         {passwordError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <p className="text-red-600 text-sm">{passwordError}</p>
+          <div className="bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-400 rounded-lg p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                <span className="text-red-600 text-sm">⚠️</span>
+              </div>
+              <div>
+                <h4 className="text-red-800 font-medium text-sm mb-1">خطأ في كلمة المرور</h4>
+                <p className="text-red-700 text-sm">{passwordError}</p>
+              </div>
+            </div>
           </div>
         )}
         
         {passwordSuccess && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-            <p className="text-green-600 text-sm">{passwordSuccess}</p>
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400 rounded-lg p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-green-600 text-sm">✅</span>
+              </div>
+              <div>
+                <h4 className="text-green-800 font-medium text-sm mb-1">تم التحديث بنجاح</h4>
+                <p className="text-green-700 text-sm">{passwordSuccess}</p>
+              </div>
+            </div>
           </div>
         )}
         
-        <button 
-          type="submit" 
-          disabled={updatingPassword || !newPassword || !confirmPassword}
-          className="w-full bg-orange-600 text-white py-3 rounded-lg font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {updatingPassword ? 'جاري تحديث كلمة المرور...' : 'تحديث كلمة المرور'}
-        </button>
+        {/* زر التحديث */}
+        <div className="pt-2">
+          <button 
+            type="submit" 
+            disabled={updatingPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword}
+            className="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-4 rounded-xl font-semibold text-sm hover:from-orange-700 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:transform-none flex items-center justify-center gap-2"
+          >
+            {updatingPassword ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                جاري تحديث كلمة المرور...
+              </>
+            ) : (
+              <>
+                <span className="text-base">🔄</span>
+                تحديث كلمة المرور
+              </>
+            )}
+          </button>
+        </div>
+        
+        {/* معلومات الأمان */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+          <div className="flex items-start gap-2">
+            <div className="w-5 h-5 text-blue-600 flex-shrink-0">
+              🛡️
+            </div>
+            <div>
+              <h5 className="text-blue-800 font-medium text-xs mb-1">نصائح الأمان</h5>
+              <ul className="text-blue-700 text-xs space-y-1">
+                <li>• استخدم مزيج من الأحرف والأرقام والرموز</li>
+                <li>• تجنب استخدام معلومات شخصية واضحة</li>
+                <li>• لا تشارك كلمة المرور مع أي شخص</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </form>
     </div>
     </>
