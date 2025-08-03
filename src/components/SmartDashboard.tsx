@@ -305,188 +305,291 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
   }
 
   return (
-    <div className="space-y-6 p-4">
-      {/* النتيجة الصحية العامة */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-6 text-white">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">النتيجة الصحية العامة</h2>
-          <Shield className="w-6 h-6" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-8">
+        {/* Header Section */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">🏥 المختبر الرقمي</h1>
+          <p className="text-gray-600">لوحة التحكم الذكية للمؤشرات الصحية</p>
         </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-3xl font-bold">{healthScore}/100</div>
-            <div className="text-blue-100 text-sm">
-              {healthScore >= 80 ? 'صحة ممتازة' : 
-               healthScore >= 60 ? 'صحة جيدة' : 
-               healthScore >= 40 ? 'صحة متوسطة' : 'تحتاج تحسين'}
-            </div>
-          </div>
-          <div className="relative">
-            <svg className="w-20 h-20 transform -rotate-90">
-              <circle
-                cx="40"
-                cy="40"
-                r="32"
-                stroke="rgba(255,255,255,0.3)"
-                strokeWidth="6"
-                fill="none"
-              />
-              <circle
-                cx="40"
-                cy="40"
-                r="32"
-                stroke="white"
-                strokeWidth="6"
-                fill="none"
-                strokeDasharray={`${(healthScore / 100) * 201} 201`}
-                strokeLinecap="round"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-lg font-bold">{healthScore}%</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* المؤشرات الصحية */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center">
-            <BarChart3 className="w-5 h-5 ml-2" />
-            المؤشرات الصحية
-          </h3>
-          <button
-            onClick={() => setShowManualInput(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            إضافة مؤشر
-          </button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {healthMetrics.map((metric, index) => (
-            <div key={index} className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">{metric.name}</span>
-                <div className="flex items-center gap-2">
-                  {getTrendIcon(metric.trend)}
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    metric.source === 'test_analysis' ? 'bg-blue-100 text-blue-700' :
-                    metric.source === 'calculated' ? 'bg-green-100 text-green-700' :
-                    'bg-gray-100 text-gray-700'
-                  }`}>
-                    {metric.source === 'test_analysis' ? 'من التحليل' :
-                     metric.source === 'calculated' ? 'محسوب' : 'يدوي'}
+        {/* النتيجة الصحية العامة - محسنة */}
+        <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-3xl p-8 text-white shadow-2xl border border-blue-200">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                  <Shield className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">النتيجة الصحية العامة</h2>
+                  <p className="text-blue-100 text-sm">تقييم شامل لحالتك الصحية</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-bold">{healthScore}</span>
+                  <span className="text-2xl text-blue-100">/100</span>
+                </div>
+                <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 backdrop-blur-sm">
+                  <div className={`w-3 h-3 rounded-full ${
+                    healthScore >= 80 ? 'bg-green-400' : 
+                    healthScore >= 60 ? 'bg-yellow-400' : 
+                    healthScore >= 40 ? 'bg-orange-400' : 'bg-red-400'
+                  }`}></div>
+                  <span className="text-sm font-medium">
+                    {healthScore >= 80 ? '🎉 صحة ممتازة' : 
+                     healthScore >= 60 ? '😊 صحة جيدة' : 
+                     healthScore >= 40 ? '⚠️ صحة متوسطة' : '🚨 تحتاج تحسين'}
                   </span>
                 </div>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold text-gray-800">
-                  {metric.value}
-                  <span className="text-sm font-normal text-gray-500 mr-1">{metric.unit}</span>
+            </div>
+            
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="w-40 h-40 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                  <svg className="w-32 h-32 transform -rotate-90">
+                    <circle
+                      cx="64"
+                      cy="64"
+                      r="56"
+                      stroke="rgba(255,255,255,0.2)"
+                      strokeWidth="8"
+                      fill="none"
+                    />
+                    <circle
+                      cx="64"
+                      cy="64"
+                      r="56"
+                      stroke="white"
+                      strokeWidth="8"
+                      fill="none"
+                      strokeDasharray={`${(healthScore / 100) * 351} 351`}
+                      strokeLinecap="round"
+                      className="transition-all duration-1000 ease-out"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-3xl font-bold">{healthScore}%</span>
+                    <span className="text-xs text-blue-100">نقاط صحية</span>
+                  </div>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(metric.status)}`}>
-                  {metric.status === 'normal' ? 'طبيعي' : 
-                   metric.status === 'warning' ? 'تحذير' : 'خطر'}
-                </span>
               </div>
             </div>
-          ))}
+          </div>
         </div>
-      </div>
 
-      {/* ملاحظة تغيير كلمة المرور */}
-      {needsPasswordReset && showPasswordNotice && (
-        <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-2xl p-6 shadow-sm animate-pulse">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-orange-600" />
+        {/* المؤشرات الصحية - محسنة */}
+        <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-xl border border-white/20">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <BarChart3 className="w-6 h-6 text-white" />
               </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-orange-900 mb-2">
-                  🔐 مطلوب تغيير كلمة المرور
-                </h3>
-                <p className="text-sm text-orange-800 leading-relaxed mb-3">
-                  تم طلب إعادة تعيين كلمة المرور لحسابك. لضمان أمان بياناتك الطبية:
-                </p>
-                <div className="bg-orange-100 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-orange-900 font-medium">
-                    📍 <span className="font-bold">الخطوات المطلوبة:</span>
-                  </p>
-                  <ol className="list-decimal list-inside text-sm text-orange-800 mt-2 space-y-1">
-                    <li>اذهب إلى قسم <span className="bg-orange-200 px-1 rounded font-bold">&quot;تعديل الملف الشخصي&quot;</span> بالأسفل</li>
-                    <li>ستجد خانة <span className="bg-orange-200 px-1 rounded font-bold">&quot;تعيين كلمة المرور الجديدة&quot;</span></li>
-                    <li>أدخل كلمة مرور جديدة وقوية (8 أحرف على الأقل)</li>
-                    <li>اضغط على &quot;تحديث كلمة المرور&quot;</li>
-                  </ol>
-                </div>
-                <p className="text-xs text-orange-700">
-                  💡 ستختفي هذه الملاحظة تلقائياً بعد 15 دقيقة وستظهر مرة أخرى عند تسجيل الدخول التالي حتى يتم تغيير كلمة المرور.
-                </p>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">المؤشرات الصحية</h3>
+                <p className="text-gray-600 text-sm">متابعة مستمرة لمؤشراتك الحيوية</p>
               </div>
             </div>
             <button
-              onClick={handleHidePasswordNotice}
-              className="flex-shrink-0 p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-100 rounded-full transition-colors"
-              title="إخفاء لمدة 15 دقيقة"
+              onClick={() => setShowManualInput(true)}
+              className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <Plus className="w-5 h-5" />
+              <span className="font-medium">إضافة مؤشر</span>
             </button>
           </div>
-        </div>
-      )}
-
-      {/* التنبيهات الصحية */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
-        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-          <AlertTriangle className="w-5 h-5 ml-2" />
-          التنبيهات الصحية
-        </h3>
-        <div className="space-y-3">
-          {alerts.map((alert) => (
-            <div key={alert.id} className={`border-r-4 p-4 rounded-lg ${getPriorityColor(alert.priority)}`}>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    {alert.type === 'medication' && <Pill className="w-4 h-4 text-red-500" />}
-                    {alert.type === 'appointment' && <Calendar className="w-4 h-4 text-blue-500" />}
-                    {alert.type === 'test' && <Stethoscope className="w-4 h-4 text-green-500" />}
-                    {alert.type === 'general' && <Info className="w-4 h-4 text-gray-500" />}
-                    <h4 className="font-medium text-gray-800">{alert.title}</h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {healthMetrics.map((metric, index) => (
+              <div key={index} className="group relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-blue-200 transform hover:-translate-y-1">
+                <div className="absolute top-4 right-4">
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${
+                    metric.source === 'test_analysis' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                    metric.source === 'calculated' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
+                    'bg-gray-100 text-gray-700 border border-gray-200'
+                  }`}>
+                    {metric.source === 'test_analysis' ? '📊 من التحليل' :
+                     metric.source === 'calculated' ? '🧮 محسوب' : '✋ يدوي'}
+                  </span>
+                </div>
+                
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h4 className="text-lg font-bold text-gray-800">{metric.name}</h4>
+                    <div className="flex items-center gap-1">
+                      {getTrendIcon(metric.trend)}
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-600">{alert.message}</p>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                    <Clock className="w-3 h-3" />
-                    {new Date(alert.date).toLocaleDateString('ar-EG')}
+                  <div className="text-sm text-gray-500">
+                    آخر تحديث: {new Date(metric.date).toLocaleDateString('ar-EG')}
                   </div>
                 </div>
-                {!alert.isRead && (
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                )}
+                
+                <div className="flex items-end justify-between">
+                  <div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold text-gray-900">{metric.value}</span>
+                      <span className="text-sm text-gray-500 font-medium">{metric.unit}</span>
+                    </div>
+                  </div>
+                  <div className={`px-4 py-2 rounded-xl text-sm font-bold shadow-sm border ${
+                    metric.status === 'normal' ? 'bg-green-50 text-green-700 border-green-200' : 
+                    metric.status === 'warning' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 
+                    'bg-red-50 text-red-700 border-red-200'
+                  }`}>
+                    {metric.status === 'normal' ? '✅ طبيعي' : 
+                     metric.status === 'warning' ? '⚠️ تحذير' : '🚨 خطر'}
+                  </div>
+                </div>
+                
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ملاحظة تغيير كلمة المرور - محسنة */}
+        {needsPasswordReset && showPasswordNotice && (
+          <div className="bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 border-2 border-orange-300 rounded-3xl p-8 shadow-xl animate-pulse">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-6">
+                <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl flex items-center justify-center shadow-lg">
+                  <AlertTriangle className="w-8 h-8 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-2xl font-bold text-orange-900 mb-3 flex items-center gap-2">
+                    🔐 مطلوب تغيير كلمة المرور
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 animate-bounce">
+                      عاجل
+                    </span>
+                  </h3>
+                  <p className="text-sm text-orange-800 leading-relaxed mb-6">
+                    تم طلب إعادة تعيين كلمة المرور لحسابك. لضمان أمان بياناتك الطبية، يرجى اتباع الخطوات أدناه:
+                  </p>
+                  <div className="bg-gradient-to-r from-orange-100 to-red-100 rounded-2xl p-6 mb-6 border border-orange-200">
+                    <p className="text-sm text-orange-900 font-bold mb-4 flex items-center gap-2">
+                      <span className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs">!</span>
+                      الخطوات المطلوبة:
+                    </p>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">1</span>
+                        <p className="text-sm text-orange-800">اذهب إلى قسم <span className="bg-orange-200 px-2 py-1 rounded-lg font-bold">"تعديل الملف الشخصي"</span> بالأسفل</p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">2</span>
+                        <p className="text-sm text-orange-800">ستجد قسم <span className="bg-orange-200 px-2 py-1 rounded-lg font-bold">"تغيير كلمة المرور"</span> في الأسفل</p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">3</span>
+                        <p className="text-sm text-orange-800">أدخل كلمة مرور جديدة وقوية (8 أحرف على الأقل)</p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">✓</span>
+                        <p className="text-sm text-orange-800">اضغط على "تحديث كلمة المرور"</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <p className="text-xs text-blue-800 flex items-center gap-2">
+                      <span className="text-lg">💡</span>
+                      <span>ستختفي هذه الملاحظة تلقائياً بعد 15 دقيقة وستظهر مرة أخرى عند تسجيل الدخول التالي حتى يتم تغيير كلمة المرور.</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={handleHidePasswordNotice}
+                className="flex-shrink-0 p-3 text-orange-600 hover:text-orange-800 hover:bg-orange-100 rounded-2xl transition-all duration-200 shadow-sm hover:shadow-md"
+                title="إخفاء لمدة 15 دقيقة"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* التنبيهات الصحية - محسنة */}
+        <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-xl border border-white/20">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <AlertTriangle className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900">التنبيهات الصحية</h3>
+              <p className="text-gray-600 text-sm">تنبيهات مهمة تتطلب انتباهك</p>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            {alerts.map((alert) => (
+              <div key={alert.id} className={`group relative rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 ${getPriorityColor(alert.priority)} hover:scale-[1.02]`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        alert.type === 'medication' ? 'bg-red-100' :
+                        alert.type === 'appointment' ? 'bg-blue-100' :
+                        alert.type === 'test' ? 'bg-green-100' : 'bg-gray-100'
+                      }`}>
+                        {alert.type === 'medication' && <Pill className="w-5 h-5 text-red-600" />}
+                        {alert.type === 'appointment' && <Calendar className="w-5 h-5 text-blue-600" />}
+                        {alert.type === 'test' && <Stethoscope className="w-5 h-5 text-green-600" />}
+                        {alert.type === 'general' && <Info className="w-5 h-5 text-gray-600" />}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-800 text-lg">{alert.title}</h4>
+                        <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+                          alert.priority === 'high' ? 'bg-red-100 text-red-700' :
+                          alert.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>
+                          {alert.priority === 'high' ? '🚨 عالي' :
+                           alert.priority === 'medium' ? '⚠️ متوسط' : '📌 منخفض'}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 text-sm leading-relaxed mb-4">{alert.message}</p>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <Clock className="w-4 h-4" />
+                      <span>تاريخ التنبيه: {new Date(alert.date).toLocaleDateString('ar-EG')}</span>
+                    </div>
+                  </div>
+                  {!alert.isRead && (
+                    <div className="flex-shrink-0">
+                      <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse shadow-lg"></div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* التحليل الذكي - محسن */}
+        <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-xl border border-white/20">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <BarChart3 className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">التحليل الذكي للحالة الصحية</h3>
+                <p className="text-gray-600 text-sm">تحليل شامل مدعوم بالذكاء الاصطناعي</p>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* التحليل الذكي */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center">
-            <BarChart3 className="w-5 h-5 ml-2" />
-            التحليل الذكي للحالة الصحية
-          </h3>
-          {analyzing && (
-            <div className="flex items-center gap-2 text-sm text-blue-600">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              جاري التحليل...
-            </div>
-          )}
-        </div>
+            {analyzing && (
+              <div className="flex items-center gap-3 px-4 py-2 bg-blue-50 rounded-2xl border border-blue-200">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+                <span className="text-sm font-medium text-blue-600">جاري التحليل...</span>
+              </div>
+            )}
+          </div>
         
         {healthAnalysis ? (
           <div className="space-y-6">
@@ -717,6 +820,7 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
           onClose={() => setShowManualInput(false)}
         />
       )}
+      </div>
     </div>
   )
 } 
