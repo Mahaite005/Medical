@@ -77,80 +77,6 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
   const [analyzing, setAnalyzing] = useState(false)
   const [showManualInput, setShowManualInput] = useState(false)
   const [showPasswordNotice, setShowPasswordNotice] = useState(false)
-  
-  // تتبع needsPasswordReset
-  console.log('🏠 SmartDashboard: needsPasswordReset =', needsPasswordReset)
-  console.log('🏠 SmartDashboard: showPasswordNotice =', showPasswordNotice)
-
-  useEffect(() => {
-    loadRealHealthData()
-    generateTips()
-  }, [profile])
-
-  useEffect(() => {
-    if (healthMetrics.length > 0 && medicalHistory.length >= 0) {
-      generateAIAnalysis()
-    }
-  }, [healthMetrics, medicalHistory])
-
-  // إدارة ملاحظة تغيير كلمة المرور
-  useEffect(() => {
-    console.log('🔄 SmartDashboard useEffect triggered: needsPasswordReset =', needsPasswordReset)
-    
-    if (needsPasswordReset) {
-      console.log('✅ needsPasswordReset is true, processing...')
-      
-      // التحقق من localStorage لمعرفة آخر مرة تم إخفاء الملاحظة
-      const lastHidden = localStorage.getItem(`password-notice-hidden-${user.id}`)
-      console.log('📦 localStorage lastHidden:', lastHidden)
-      
-      if (lastHidden) {
-        const hiddenTime = new Date(lastHidden)
-        const now = new Date()
-        const diffMinutes = (now.getTime() - hiddenTime.getTime()) / (1000 * 60)
-        console.log('⏰ Minutes since hidden:', diffMinutes)
-        
-        // إذا مر أكثر من 15 دقيقة، اعرض الملاحظة مرة أخرى
-        if (diffMinutes > 15) {
-          console.log('🔄 15+ minutes passed, showing notice again')
-          setShowPasswordNotice(true)
-          localStorage.removeItem(`password-notice-hidden-${user.id}`)
-        } else {
-          console.log('⏱️ Less than 15 minutes, keeping notice hidden')
-        }
-      } else {
-        console.log('🆕 First time, showing notice')
-        // أول مرة، اعرض الملاحظة
-        setShowPasswordNotice(true)
-      }
-    } else {
-      console.log('❌ needsPasswordReset is false, hiding notice')
-      setShowPasswordNotice(false)
-    }
-  }, [needsPasswordReset, user.id])
-
-  // جلب البيانات الصحية الحقيقية
-  const loadRealHealthData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const healthData = await getPatientHealthData(user.id)
-      
-      setHealthMetrics(healthData.healthMetrics)
-      setHealthScore(healthData.healthScore)
-      setMedicalHistory(healthData.medicalTests || [])
-      
-      // توليد تنبيهات بناءً على البيانات الحقيقية
-      const realAlerts = generateRealAlerts(healthData.profile, healthData.healthMetrics, healthData.medicalTests || [])
-      setAlerts(realAlerts)
-      
-    } catch (error) {
-      console.error('Error loading real health data:', error)
-      // في حالة الخطأ، نستخدم البيانات الافتراضية
-      generateDefaultHealthData()
-    } finally {
-      setLoading(false)
-    }
-  }, [user.id, profile])
 
   // توليد بيانات افتراضية في حالة عدم وجود بيانات حقيقية
   const generateDefaultHealthData = () => {
@@ -196,7 +122,28 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
     setHealthMetrics(baseMetrics)
   }
 
-
+  // جلب البيانات الصحية الحقيقية  
+  const loadRealHealthData = useCallback(async () => {
+    try {
+      setLoading(true)
+      const healthData = await getPatientHealthData(user.id)
+      
+      setHealthMetrics(healthData.healthMetrics)
+      setHealthScore(healthData.healthScore)
+      setMedicalHistory(healthData.medicalTests || [])
+      
+      // توليد تنبيهات بناءً على البيانات الحقيقية
+      const realAlerts = generateRealAlerts(healthData.profile, healthData.healthMetrics, healthData.medicalTests || [])
+      setAlerts(realAlerts)
+      
+    } catch (error) {
+      console.error('Error loading real health data:', error)
+      // في حالة الخطأ، نستخدم البيانات الافتراضية
+      generateDefaultHealthData()
+    } finally {
+      setLoading(false)
+    }
+  }, [user.id])
 
   // توليد نصائح طبية مخصصة
   const generateTips = useCallback(() => {
@@ -224,28 +171,6 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
       }
     }
 
-    // نصائح بناءً على الحالة الصحية
-    if (profile?.is_smoker) {
-      baseTips.push({
-        id: '2',
-        title: 'الإقلاع عن التدخين',
-        content: 'فكر في الإقلاع عن التدخين لتحسين صحتك العامة',
-        category: 'lifestyle',
-        icon: '🚭'
-      })
-    }
-
-    if (profile?.chronic_diseases?.includes('سكري')) {
-      baseTips.push({
-        id: '3',
-        title: 'إدارة السكري',
-        content: 'راقب مستوى السكر بانتظام واتبع نظام غذائي متوازن',
-        category: 'nutrition',
-        icon: '🩸'
-      })
-    }
-
-    // نصائح عامة
     baseTips.push({
       id: '4',
       title: 'النوم الجيد',
@@ -255,8 +180,75 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
     })
 
     setTips(baseTips)
-    setLoading(false)
   }, [profile])
+
+  // توليد تحليل طبي شامل
+  const generateAIAnalysis = useCallback(async () => {
+    if (analyzing) return
+    
+    setAnalyzing(true)
+    try {
+      const analysis = await generateHealthReport(profile, healthMetrics, medicalHistory)
+      setHealthAnalysis(analysis)
+    } catch (error) {
+      console.error('خطأ في التحليل الطبي:', error)
+      const fallbackAnalysis: HealthAnalysis = {
+        summary: `بناءً على بيانات المريض، الحالة الصحية جيدة نسبياً.`,
+        recommendations: ['مراجعة الطبيب بشكل دوري', 'إجراء فحوصات دورية'],
+        riskFactors: [],
+        lifestyleTips: ['الحفاظ على وزن صحي', 'النوم 7-8 ساعات يومياً'],
+        nextSteps: ['حجز موعد مع الطبيب'],
+        generatedAt: new Date().toISOString()
+      }
+      setHealthAnalysis(fallbackAnalysis)
+    } finally {
+      setAnalyzing(false)
+    }
+  }, [analyzing, profile, healthMetrics, medicalHistory])
+
+  useEffect(() => {
+    loadRealHealthData()
+    generateTips()
+  }, [loadRealHealthData, generateTips])
+
+  useEffect(() => {
+    if (healthMetrics.length > 0 && medicalHistory.length >= 0) {
+      generateAIAnalysis()
+    }
+  }, [healthMetrics, medicalHistory, generateAIAnalysis])
+
+  // إدارة ملاحظة تغيير كلمة المرور
+  useEffect(() => {
+    // التأكد من أننا في client side قبل استخدام localStorage
+    if (typeof window === 'undefined') return;
+    
+    if (needsPasswordReset) {
+      try {
+        // التحقق من localStorage لمعرفة آخر مرة تم إخفاء الملاحظة
+        const lastHidden = localStorage.getItem(`password-notice-hidden-${user.id}`)
+        
+        if (lastHidden) {
+          const hiddenTime = new Date(lastHidden)
+          const now = new Date()
+          const diffMinutes = (now.getTime() - hiddenTime.getTime()) / (1000 * 60)
+          
+          // إذا مر أكثر من 15 دقيقة، اعرض الملاحظة مرة أخرى
+          if (diffMinutes > 15) {
+            setShowPasswordNotice(true)
+            localStorage.removeItem(`password-notice-hidden-${user.id}`)
+          }
+        } else {
+          // أول مرة، اعرض الملاحظة
+          setShowPasswordNotice(true)
+        }
+      } catch (error) {
+        // في حالة خطأ في localStorage، اعرض الملاحظة
+        setShowPasswordNotice(true)
+      }
+    } else {
+      setShowPasswordNotice(false)
+    }
+  }, [needsPasswordReset, user.id])
 
   // إضافة مؤشر صحي يدوياً
   const handleAddManualMetric = (metric: RealHealthMetric) => {
@@ -266,53 +258,16 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
   // إغلاق ملاحظة تغيير كلمة المرور
   const handleHidePasswordNotice = () => {
     setShowPasswordNotice(false)
-    localStorage.setItem(`password-notice-hidden-${user.id}`, new Date().toISOString())
-  }
-
-  // توليد تحليل طبي شامل
-  const generateAIAnalysis = useCallback(async () => {
-    if (analyzing) return
     
-    setAnalyzing(true)
-    try {
-      console.log('بدء التحليل الطبي...')
-      console.log('بيانات المريض:', profile)
-      console.log('المؤشرات الصحية:', healthMetrics)
-      console.log('السجل الطبي:', medicalHistory)
-      
-      const analysis = await generateHealthReport(profile, healthMetrics, medicalHistory)
-      console.log('نتيجة التحليل:', analysis)
-      setHealthAnalysis(analysis)
-    } catch (error) {
-      console.error('خطأ في التحليل الطبي:', error)
-      // إنشاء تحليل بديل في حالة الخطأ
-      const fallbackAnalysis: HealthAnalysis = {
-        summary: `بناءً على بيانات المريض، العمر: ${profile?.age || 'غير محدد'} سنة، الجنس: ${profile?.gender || 'غير محدد'}، والأمراض المزمنة: ${profile?.chronic_diseases || 'لا توجد'}، يبدو أن الحالة الصحية ${profile?.is_smoker ? 'تحتاج مراقبة خاصة' : 'جيدة نسبياً'}.`,
-        recommendations: [
-          'مراجعة الطبيب بشكل دوري',
-          'إجراء فحوصات دورية',
-          'اتباع نظام غذائي صحي',
-          'ممارسة الرياضة بانتظام'
-        ],
-        riskFactors: profile?.is_smoker ? ['التدخين'] : [],
-        lifestyleTips: [
-          'الحفاظ على وزن صحي',
-          'النوم 7-8 ساعات يومياً',
-          'شرب الماء بكميات كافية',
-          'تجنب التوتر والإجهاد'
-        ],
-        nextSteps: [
-          'حجز موعد مع الطبيب',
-          'إجراء فحوصات دورية',
-          'متابعة المؤشرات الصحية'
-        ],
-        generatedAt: new Date().toISOString()
+    // التأكد من أننا في client side قبل استخدام localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(`password-notice-hidden-${user.id}`, new Date().toISOString())
+      } catch (error) {
+        // تجاهل الخطأ إذا فشل localStorage
       }
-      setHealthAnalysis(fallbackAnalysis)
-    } finally {
-      setAnalyzing(false)
     }
-  }, [analyzing, profile, healthMetrics, medicalHistory])
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
