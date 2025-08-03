@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { Calendar, FileText, Eye, Download } from 'lucide-react'
@@ -23,11 +23,7 @@ export default function TestHistory({ user }: TestHistoryProps) {
   const [loading, setLoading] = useState(true)
   const [selectedTest, setSelectedTest] = useState<MedicalTest | null>(null)
 
-  useEffect(() => {
-    fetchTests()
-  }, [user.id])
-
-  const fetchTests = async () => {
+  const fetchTests = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('medical_tests')
@@ -42,7 +38,11 @@ export default function TestHistory({ user }: TestHistoryProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user.id])
+
+  useEffect(() => {
+    fetchTests()
+  }, [fetchTests])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)

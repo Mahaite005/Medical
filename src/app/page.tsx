@@ -79,7 +79,7 @@ export default function Home() {
     )
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [isPasswordResetFlow])
 
   // If we're in password reset flow, show loading
   if (isPasswordResetFlow) {

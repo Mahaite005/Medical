@@ -29,7 +29,7 @@ export default function Header({ user, profile, onLogout, needsPasswordReset }: 
                   تم طلب إعادة تعيين كلمة المرور لحسابك.
                   <br />
                   <span className="font-semibold">الخطوة التالية:</span> اذهب إلى 
-                  <span className="bg-orange-200 px-1 rounded mx-1 font-bold">"تعديل الملف الشخصي"</span>
+                  <span className="bg-orange-200 px-1 rounded mx-1 font-bold">&quot;تعديل الملف الشخصي&quot;</span>
                   وقم بتحديث كلمة المرور في القسم السفلي.
                 </p>
               </div>

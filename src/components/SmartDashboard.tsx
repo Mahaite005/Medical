@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { generateHealthReport } from '@/lib/healthAnalysis'
@@ -88,7 +88,7 @@ export default function SmartDashboard({ user, profile }: SmartDashboardProps) {
   }, [healthMetrics, medicalHistory])
 
   // جلب البيانات الصحية الحقيقية
-  const loadRealHealthData = async () => {
+  const loadRealHealthData = useCallback(async () => {
     try {
       setLoading(true)
       const healthData = await getPatientHealthData(user.id)
@@ -108,7 +108,7 @@ export default function SmartDashboard({ user, profile }: SmartDashboardProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user.id, profile])
 
   // توليد بيانات افتراضية في حالة عدم وجود بيانات حقيقية
   const generateDefaultHealthData = () => {
@@ -157,7 +157,7 @@ export default function SmartDashboard({ user, profile }: SmartDashboardProps) {
 
 
   // توليد نصائح طبية مخصصة
-  const generateTips = () => {
+  const generateTips = useCallback(() => {
     const baseTips: HealthTip[] = []
 
     // نصائح بناءً على العمر
@@ -214,7 +214,7 @@ export default function SmartDashboard({ user, profile }: SmartDashboardProps) {
 
     setTips(baseTips)
     setLoading(false)
-  }
+  }, [profile])
 
   // إضافة مؤشر صحي يدوياً
   const handleAddManualMetric = (metric: RealHealthMetric) => {
@@ -222,7 +222,7 @@ export default function SmartDashboard({ user, profile }: SmartDashboardProps) {
   }
 
   // توليد تحليل طبي شامل
-  const generateAIAnalysis = async () => {
+  const generateAIAnalysis = useCallback(async () => {
     if (analyzing) return
     
     setAnalyzing(true)
@@ -264,7 +264,7 @@ export default function SmartDashboard({ user, profile }: SmartDashboardProps) {
     } finally {
       setAnalyzing(false)
     }
-  }
+  }, [analyzing, profile, healthMetrics, medicalHistory])
 
   const getStatusColor = (status: string) => {
     switch (status) {
