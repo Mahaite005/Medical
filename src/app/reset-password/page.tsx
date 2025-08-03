@@ -29,14 +29,18 @@ export default function ResetPasswordPage() {
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         const type = urlParams.get('type');
+        const accessToken = urlParams.get('access_token');
+        const refreshToken = urlParams.get('refresh_token');
         
         console.log('URL search params:', Array.from(urlParams.entries()));
         console.log('Code present:', !!code);
+        console.log('Access token present:', !!accessToken);
         console.log('Token type:', type);
         
         // Check if we have the required parameters
-        if (!code) {
-          console.error('No code found in URL');
+        // Accept either code or access_token for recovery
+        if (!code && !accessToken) {
+          console.error('No authentication tokens found in URL');
           setError('رابط غير صالح. يرجى طلب رابط جديد. تأكد من النقر على الرابط مباشرة من بريدك الإلكتروني.');
           return;
         }
@@ -48,7 +52,23 @@ export default function ResetPasswordPage() {
           return;
         }
 
-        setAuthCode(code);
+        // If we have access_token, user is already logged in by Supabase
+        if (accessToken && refreshToken) {
+          console.log('Access token found - user is already authenticated');
+          // Set the session with the tokens
+          supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          }).then(() => {
+            setSessionReady(true);
+          }).catch((error) => {
+            console.error('Error setting session with tokens:', error);
+            setError('فشل في إعداد الجلسة. يرجى طلب رابط جديد.');
+          });
+        } else if (code) {
+          // Use the code for exchange
+          setAuthCode(code);
+        }
       } catch (error) {
         console.error('Error parsing URL:', error);
         setError('حدث خطأ في معالجة الرابط. يرجى طلب رابط جديد.');
@@ -156,8 +176,8 @@ export default function ResetPasswordPage() {
     }
   };
 
-  // Show error if no code found
-  if (!authCode) {
+  // Show error if no valid authentication tokens found
+  if (!authCode && !sessionReady && !error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
@@ -172,6 +192,29 @@ export default function ResetPasswordPage() {
             <br />
             <span className="text-sm text-gray-500 block mt-2">تأكد من النقر على الرابط مباشرة من البريد الإلكتروني وعدم نسخه ولصقه.</span>
           </p>
+          <button
+            onClick={() => router.push('/')}
+            className="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700"
+          >
+            العودة للصفحة الرئيسية
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show error message if there's an error
+  if (error && !sessionReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
+          <div className="text-red-500 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold mb-4 text-red-600">خطأ في الرابط</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => router.push('/')}
             className="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700"
