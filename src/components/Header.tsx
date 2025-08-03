@@ -1,17 +1,37 @@
 'use client'
 
 import { User } from '@supabase/supabase-js'
-import { LogOut, User as UserIcon } from 'lucide-react'
+import { LogOut, User as UserIcon, AlertTriangle } from 'lucide-react'
 
 interface HeaderProps {
   user: User
   profile: any
   onLogout: () => void
+  needsPasswordReset?: boolean
 }
 
-export default function Header({ user, profile, onLogout }: HeaderProps) {
+export default function Header({ user, profile, onLogout, needsPasswordReset }: HeaderProps) {
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
+      {/* رسالة تنبيه تغيير كلمة المرور */}
+      {needsPasswordReset && (
+        <div className="bg-orange-50 border-b border-orange-200">
+          <div className="max-w-md mx-auto px-4 py-3">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm text-orange-800 font-medium">
+                  مطلوب تغيير كلمة المرور
+                </p>
+                <p className="text-xs text-orange-700 mt-1">
+                  يرجى تحديث كلمة المرور من قسم تعديل الملف الشخصي لضمان أمان حسابك
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="max-w-md mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

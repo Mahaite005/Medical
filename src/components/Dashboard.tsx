@@ -12,11 +12,12 @@ import Header from './Header'
 interface DashboardProps {
   user: User
   onEditProfile?: () => void
+  needsPasswordReset?: boolean
 }
 
 type ActiveView = 'upload' | 'history' | 'editProfile' | 'smartDashboard'
 
-export default function Dashboard({ user, onEditProfile }: DashboardProps) {
+export default function Dashboard({ user, onEditProfile, needsPasswordReset }: DashboardProps) {
   const [activeView, setActiveView] = useState<ActiveView>('smartDashboard')
   const [profile, setProfile] = useState<any>(null)
 
@@ -41,7 +42,7 @@ export default function Dashboard({ user, onEditProfile }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <Header user={user} profile={profile} onLogout={handleLogout} />
+      <Header user={user} profile={profile} onLogout={handleLogout} needsPasswordReset={needsPasswordReset} />
       
       {/* Navigation */}
       <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">

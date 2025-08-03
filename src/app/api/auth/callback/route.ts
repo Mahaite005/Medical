@@ -30,18 +30,27 @@ export async function GET(request: NextRequest) {
     // إذا كان نوع الطلب هو recovery (إعادة تعيين كلمة المرور)
     // Supabase قد يرسل إما code أو access_token بناءً على نوع التحقق
     if (type === 'recovery' && (code || accessToken)) {
-      // بناء رابط إعادة التوجيه مع الحفاظ على جميع المعلمات
-      const resetPasswordUrl = new URL('/reset-password', process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app')
+      // بناء رابط إعادة التوجيه إلى الصفحة الرئيسية مع معلمة تنبيه
+      const dashboardUrl = new URL('/', process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app')
       
-      // نقل جميع المعلمات إلى الرابط الجديد
-      searchParams.forEach((value, key) => {
-        resetPasswordUrl.searchParams.append(key, value)
-      })
+      // إضافة معلمة تدل على ضرورة تغيير كلمة المرور
+      dashboardUrl.searchParams.append('reset_password', 'true')
       
-      console.log('Redirecting to reset password page:', resetPasswordUrl.toString())
+      // إضافة المعلمات المطلوبة لإعداد الجلسة إذا كانت موجودة
+      if (accessToken) {
+        dashboardUrl.searchParams.append('access_token', accessToken)
+      }
+      if (refreshToken) {
+        dashboardUrl.searchParams.append('refresh_token', refreshToken)
+      }
+      if (code) {
+        dashboardUrl.searchParams.append('code', code)
+      }
       
-      // إعادة التوجيه إلى صفحة إعادة تعيين كلمة المرور
-      return NextResponse.redirect(resetPasswordUrl)
+      console.log('Redirecting to dashboard with reset password flag:', dashboardUrl.toString())
+      
+      // إعادة التوجيه إلى الصفحة الرئيسية مع تنبيه تغيير كلمة المرور
+      return NextResponse.redirect(dashboardUrl)
     }
     
     // التحقق من حالة تسجيل الدخول العادي

@@ -25,9 +25,11 @@ const moodAvatars = [
 interface EditProfileProps {
   user: User;
   onProfileUpdated?: () => void;
+  needsPasswordReset?: boolean;
+  onPasswordResetComplete?: () => void;
 }
 
-export default function EditProfile({ user, onProfileUpdated }: EditProfileProps) {
+export default function EditProfile({ user, onProfileUpdated, needsPasswordReset, onPasswordResetComplete }: EditProfileProps) {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -35,6 +37,13 @@ export default function EditProfile({ user, onProfileUpdated }: EditProfileProps
   const [success, setSuccess] = useState('');
   const [avatar, setAvatar] = useState<string>('');
   const [customAvatar, setCustomAvatar] = useState<File | null>(null);
+
+  // حقول تغيير كلمة المرور
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [updatingPassword, setUpdatingPassword] = useState(false);
 
   // الحقول الشخصية والطبية
   const [fullName, setFullName] = useState('');
@@ -149,6 +158,56 @@ export default function EditProfile({ user, onProfileUpdated }: EditProfileProps
   const handleSelectAvatar = (url: string) => {
     setAvatar(url);
     setCustomAvatar(null);
+  };
+
+  // تحديث كلمة المرور
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+    
+    // التحقق من صحة كلمة المرور
+    if (newPassword.length < 8) {
+      setPasswordError('كلمة المرور يجب أن تكون 8 أحرف على الأقل');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      setPasswordError('كلمتا المرور غير متطابقتين');
+      return;
+    }
+    
+    setUpdatingPassword(true);
+    
+    try {
+      const { error } = await supabase.auth.updateUser({ 
+        password: newPassword 
+      });
+      
+      if (error) {
+        console.error('Password update error:', error);
+        setPasswordError(error.message || 'حدث خطأ أثناء تحديث كلمة المرور');
+      } else {
+        setPasswordSuccess('تم تحديث كلمة المرور بنجاح!');
+        setNewPassword('');
+        setConfirmPassword('');
+        
+        // إشعار بانتهاء عملية إعادة تعيين كلمة المرور
+        if (onPasswordResetComplete) {
+          onPasswordResetComplete();
+        }
+        
+        // تأخير قليل ثم مسح رسالة النجاح
+        setTimeout(() => {
+          setPasswordSuccess('');
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      setPasswordError('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
+    }
+    
+    setUpdatingPassword(false);
   };
 
   if (loading) return <div className="text-center py-8">جاري تحميل البيانات...</div>;
@@ -275,6 +334,80 @@ export default function EditProfile({ user, onProfileUpdated }: EditProfileProps
       {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-4 text-red-600">{error}</div>}
       {success && <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4 text-green-600">{success}</div>}
       <button type="submit" disabled={saving} className="w-full bg-primary-600 text-white py-3 rounded-lg font-medium mt-6 hover:bg-primary-700 disabled:opacity-50">{saving ? 'جاري الحفظ...' : 'حفظ التعديلات'}</button>
+      
+      {/* قسم تغيير كلمة المرور */}
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            تغيير كلمة المرور
+          </h3>
+          {needsPasswordReset && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+              مطلوب
+            </span>
+          )}
+        </div>
+        
+        {needsPasswordReset && (
+          <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            <p className="text-sm text-orange-800">
+              🔐 تم طلب إعادة تعيين كلمة المرور لحسابك. يرجى إدخال كلمة مرور جديدة أدناه لضمان أمان حسابك.
+            </p>
+          </div>
+        )}
+        
+        <form onSubmit={handlePasswordUpdate} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              كلمة المرور الجديدة
+            </label>
+            <input 
+              type="password" 
+              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
+              value={newPassword} 
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="أدخل كلمة المرور الجديدة (8 أحرف على الأقل)"
+              minLength={8}
+              required 
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              تأكيد كلمة المرور الجديدة
+            </label>
+            <input 
+              type="password" 
+              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
+              value={confirmPassword} 
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="أعد إدخال كلمة المرور الجديدة"
+              minLength={8}
+              required 
+            />
+          </div>
+          
+          {passwordError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-red-600 text-sm">{passwordError}</p>
+            </div>
+          )}
+          
+          {passwordSuccess && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <p className="text-green-600 text-sm">{passwordSuccess}</p>
+            </div>
+          )}
+          
+          <button 
+            type="submit" 
+            disabled={updatingPassword || !newPassword || !confirmPassword}
+            className="w-full bg-orange-600 text-white py-3 rounded-lg font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {updatingPassword ? 'جاري تحديث كلمة المرور...' : 'تحديث كلمة المرور'}
+          </button>
+        </form>
+      </div>
     </form>
   );
 } 
