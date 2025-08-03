@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
-import { Camera, User as UserIcon } from 'lucide-react';
+import { Camera, User as UserIcon, Eye, EyeOff } from 'lucide-react';
 
 // قائمة إيموجي احترافية كأفاتار (مزاجية/شخصية)
 const moodAvatars = [
@@ -44,6 +44,8 @@ export default function EditProfile({ user, onProfileUpdated, needsPasswordReset
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // الحقول الشخصية والطبية
   const [fullName, setFullName] = useState('');
@@ -389,8 +391,8 @@ export default function EditProfile({ user, onProfileUpdated, needsPasswordReset
           </label>
           <div className="relative">
             <input 
-              type="password" 
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 text-sm placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-gray-300" 
+              type={showNewPassword ? "text" : "password"}
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 pr-12 pl-12 text-sm placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-gray-300" 
               value={newPassword} 
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="أدخل كلمة المرور الجديدة (8 أحرف على الأقل)"
@@ -402,6 +404,17 @@ export default function EditProfile({ user, onProfileUpdated, needsPasswordReset
                 🔒
               </div>
             </div>
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+            >
+              {showNewPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
+            </button>
           </div>
           <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
             <span className="w-3 h-3 text-gray-400">ℹ️</span>
@@ -419,8 +432,8 @@ export default function EditProfile({ user, onProfileUpdated, needsPasswordReset
           </label>
           <div className="relative">
             <input 
-              type="password" 
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 text-sm placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 shadow-sm hover:border-gray-300" 
+              type={showConfirmPassword ? "text" : "password"}
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 pr-12 pl-12 text-sm placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 shadow-sm hover:border-gray-300" 
               value={confirmPassword} 
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="أعد إدخال كلمة المرور للتأكيد"
@@ -432,6 +445,17 @@ export default function EditProfile({ user, onProfileUpdated, needsPasswordReset
                 🔐
               </div>
             </div>
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
+            </button>
           </div>
           {confirmPassword && newPassword && (
             <p className={`text-xs mt-1 flex items-center gap-1 ${newPassword === confirmPassword ? 'text-green-600' : 'text-red-500'}`}>
