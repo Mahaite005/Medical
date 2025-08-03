@@ -477,11 +477,11 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
                     <div className="space-y-3">
                       <div className="flex items-start gap-3">
                         <span className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">1</span>
-                        <p className="text-sm text-orange-800">اذهب إلى قسم <span className="bg-orange-200 px-2 py-1 rounded-lg font-bold">"تعديل الملف الشخصي"</span> بالأسفل</p>
+                        <p className="text-sm text-orange-800">اذهب إلى قسم <span className="bg-orange-200 px-2 py-1 rounded-lg font-bold">&quot;تعديل الملف الشخصي&quot;</span> بالأسفل</p>
                       </div>
                       <div className="flex items-start gap-3">
                         <span className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">2</span>
-                        <p className="text-sm text-orange-800">ستجد قسم <span className="bg-orange-200 px-2 py-1 rounded-lg font-bold">"تغيير كلمة المرور"</span> في الأسفل</p>
+                        <p className="text-sm text-orange-800">ستجد قسم <span className="bg-orange-200 px-2 py-1 rounded-lg font-bold">&quot;تغيير كلمة المرور&quot;</span> في الأسفل</p>
                       </div>
                       <div className="flex items-start gap-3">
                         <span className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">3</span>
@@ -489,7 +489,7 @@ export default function SmartDashboard({ user, profile, needsPasswordReset }: Sm
                       </div>
                       <div className="flex items-start gap-3">
                         <span className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">✓</span>
-                        <p className="text-sm text-orange-800">اضغط على "تحديث كلمة المرور"</p>
+                        <p className="text-sm text-orange-800">اضغط على &quot;تحديث كلمة المرور&quot;</p>
                       </div>
                     </div>
                   </div>
