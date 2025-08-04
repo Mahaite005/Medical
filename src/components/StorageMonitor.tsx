@@ -52,8 +52,6 @@ export default function StorageMonitor() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [cleanupLoading, setCleanupLoading] = useState(false)
-  const [previewLoading, setPreviewLoading] = useState(false)
-  const [cleanupPreview, setCleanupPreview] = useState<any>(null)
 
   useEffect(() => {
     fetchStorageUsage()
@@ -93,46 +91,12 @@ export default function StorageMonitor() {
     }
   }
 
-  // معاينة الملفات التي سيتم حذفها
-  const handlePreviewCleanup = async () => {
-    try {
-      setPreviewLoading(true)
-      setError(null)
-      
-      const response = await fetch('/api/cleanup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ dryRun: true })
-      })
-      
-      const data = await response.json()
-      
-      if (response.ok) {
-        setCleanupPreview(data)
-      } else {
-        setError(data.error || 'فشل في معاينة التنظيف')
-      }
-    } catch (error) {
-      setError('حدث خطأ أثناء معاينة التنظيف')
-    } finally {
-      setPreviewLoading(false)
-    }
-  }
-
-  // تنفيذ التنظيف الفعلي
   const handleManualCleanup = async () => {
     try {
       setCleanupLoading(true)
-      setError(null)
       
       const response = await fetch('/api/cleanup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ confirm: true })
+        method: 'POST'
       })
       const data = await response.json()
       
@@ -140,13 +104,12 @@ export default function StorageMonitor() {
         // إعادة تحميل البيانات
         await fetchStorageUsage()
         await fetchCleanupStats()
-        setCleanupPreview(null) // إخفاء المعاينة بعد التنظيف
-        alert(`تم التنظيف بنجاح! ${data.info?.deletedFiles || 0} ملف محذوف، ${data.info?.freedSpace || '0 MB'} تم تحريرها`)
+        alert('تم التنظيف بنجاح!')
       } else {
-        setError(data.error || 'فشل في التنظيف')
+        alert('فشل في التنظيف: ' + (data.error || 'خطأ غير معروف'))
       }
     } catch (error) {
-      setError('حدث خطأ في الاتصال أثناء التنظيف')
+      alert('حدث خطأ في الاتصال')
     } finally {
       setCleanupLoading(false)
     }
@@ -286,68 +249,18 @@ export default function StorageMonitor() {
             <p className="text-xs mt-1">التنظيف التالي: {cleanupData.info.nextCleanup}</p>
           </div>
           {cleanupData.stats.willBeDeleted && (
-            <div className="space-y-3">
-              {/* أزرار التنظيف */}
-              <div className="flex gap-2">
-                <button
-                  onClick={handlePreviewCleanup}
-                  disabled={previewLoading || cleanupLoading}
-                  className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
-                >
-                  {previewLoading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  ) : (
-                    <Clock className="w-4 h-4" />
-                  )}
-                  معاينة التنظيف
-                </button>
-                
-                <button
-                  onClick={handleManualCleanup}
-                  disabled={cleanupLoading || previewLoading}
-                  className="flex items-center gap-2 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 text-sm"
-                >
-                  {cleanupLoading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
-                  حذف فوري
-                </button>
-              </div>
-              
-              {/* عرض المعاينة */}
-              {cleanupPreview && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                  <h4 className="font-semibold text-gray-800 mb-2">📋 معاينة الملفات المرشحة للحذف</h4>
-                  <div className="text-sm text-gray-700 space-y-1">
-                    <p>• عدد الملفات: <span className="font-bold text-orange-600">{cleanupPreview.info?.foundFiles || 0}</span></p>
-                    <p>• المساحة المحررة: <span className="font-bold text-green-600">{cleanupPreview.info?.freedSpace || '0 MB'}</span></p>
-                    <p>• النمط: <span className="font-bold">{cleanupPreview.info?.mode || 'محاكاة'}</span></p>
-                  </div>
-                  
-                  {cleanupPreview.info?.fileDetails && cleanupPreview.info.fileDetails.length > 0 && (
-                    <div className="mt-3">
-                      <p className="text-xs font-semibold text-gray-600 mb-2">تفاصيل الملفات:</p>
-                      <div className="max-h-40 overflow-y-auto bg-white rounded border p-2">
-                        {cleanupPreview.info.fileDetails.slice(0, 10).map((file: any, index: number) => (
-                          <div key={index} className="text-xs text-gray-600 py-1 border-b border-gray-100 last:border-b-0">
-                            📄 {file.name} ({file.ageInDays} يوم، {file.size} KB)
-                          </div>
-                        ))}
-                        {cleanupPreview.info.fileDetails.length > 10 && (
-                          <div className="text-xs text-gray-500 mt-1">... و {cleanupPreview.info.fileDetails.length - 10} ملف آخر</div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="mt-3 p-2 bg-yellow-50 rounded border border-yellow-200">
-                    <p className="text-xs text-yellow-800">⚠️ هذه معاينة فقط. لم يتم حذف أي ملف بعد.</p>
-                  </div>
-                </div>
+            <button
+              onClick={handleManualCleanup}
+              disabled={cleanupLoading}
+              className="flex items-center gap-2 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 text-sm"
+            >
+              {cleanupLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <Trash2 className="w-4 h-4" />
               )}
-            </div>
+              تنظيف يدوي الآن
+            </button>
           )}
         </div>
       )}

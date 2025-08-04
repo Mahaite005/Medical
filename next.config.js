@@ -1,12 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // إعدادات API Routes
-  experimental: {
-    serverComponentsExternalPackages: ['@supabase/supabase-js'],
-  },
-  
-  // تكوين output للتأكد من التوافق مع Vercel
-  output: 'standalone',
+
 
   images: {
     domains: [

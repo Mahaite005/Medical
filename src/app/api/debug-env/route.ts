@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// إجبار هذا الـ route على أن يكون dynamic
-export const dynamic = 'force-dynamic'
-
 export async function GET(request: NextRequest) {
   // Only allow in development or with specific key
   const debugKey = request.nextUrl.searchParams.get('key')
