@@ -3,8 +3,7 @@
     "src/app/api/auth/callback/route.ts": {
       "runtime": "nodejs18.x",
       "maxDuration": 10,
-      "memory": 256,
-      "regions": ["cle1"]
+      "memory": 256
     },
     "src/app/api/analyze/route.ts": {
       "runtime": "nodejs18.x",
