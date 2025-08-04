@@ -1,34 +1,22 @@
 {
   "functions": {
     "src/app/api/auth/callback/route.ts": {
-      "runtime": "nodejs18.x",
-      "maxDuration": 10,
-      "memory": 256
+      "maxDuration": 10
     },
     "src/app/api/analyze/route.ts": {
-      "runtime": "nodejs18.x",
-      "maxDuration": 60,
-      "memory": 1024
+      "maxDuration": 60
     },
     "src/app/api/cleanup/route.ts": {
-      "runtime": "nodejs18.x",
-      "maxDuration": 300,
-      "memory": 512
+      "maxDuration": 300
     },
     "src/app/api/password-reset/route.ts": {
-      "runtime": "nodejs18.x",
-      "maxDuration": 30,
-      "memory": 512
+      "maxDuration": 30
     },
     "src/app/api/debug-env/route.ts": {
-      "runtime": "nodejs18.x",
-      "maxDuration": 10,
-      "memory": 256
+      "maxDuration": 10
     },
     "src/app/api/storage-usage/route.ts": {
-      "runtime": "nodejs18.x",
-      "maxDuration": 30,
-      "memory": 512
+      "maxDuration": 30
     }
   },
   "crons": [
@@ -36,8 +24,5 @@
       "path": "/api/cleanup",
       "schedule": "0 */6 * * *"
     }
-  ],
-  "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next"
+  ]
 }
