@@ -1,27 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// تكوين صارم للـ API route
+// Force dynamic rendering - prevent static generation
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
-export const revalidate = 0
-export const fetchCache = 'force-no-store'
 
 /**
- * Auth callback route - completely static approach
+ * Auth callback route for handling authentication redirects
  */
 export async function GET(request: NextRequest) {
   const baseUrl = 'https://medicalapp-teal.vercel.app'
   
   try {
-    // استخراج المعاملات بطريقة آمنة
-    const url = request.nextUrl
-    const code = url.searchParams.get('code')
-    const type = url.searchParams.get('type')
-    const accessToken = url.searchParams.get('access_token')
-    const refreshToken = url.searchParams.get('refresh_token')
+    // Extract URL and search parameters safely
+    const { searchParams } = new URL(request.url)
+    const code = searchParams.get('code')
+    const type = searchParams.get('type')
+    const accessToken = searchParams.get('access_token')
+    const refreshToken = searchParams.get('refresh_token')
     
     // Build redirect URL
-    let redirectTo = baseUrl + '/'
+    let redirectTo = `${baseUrl}/`
     
     if (type === 'recovery' && (code || accessToken)) {
       // Password reset flow
@@ -32,13 +30,15 @@ export async function GET(request: NextRequest) {
       if (refreshToken) params.set('refresh_token', refreshToken)
       if (code) params.set('code', code)
       
-      redirectTo = baseUrl + '/?' + params.toString()
+      redirectTo = `${baseUrl}/?${params.toString()}`
     }
     
     return NextResponse.redirect(redirectTo)
     
-  } catch {
+  } catch (error) {
+    // Log error for debugging but don't expose details
+    console.error('Auth callback error:', error)
     // Safe fallback
-    return NextResponse.redirect(baseUrl + '/')
+    return NextResponse.redirect(`${baseUrl}/`)
   }
 }
