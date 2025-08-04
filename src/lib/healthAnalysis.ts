@@ -1,19 +1,23 @@
-// دالة للتواصل مع OpenRouter API
-async function callOpenRouterAPI(messages: any[]) {
+// دالة للتواصل مع Gemini API
+async function callGeminiAPI(messages: any[]) {
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'http://localhost:3000',
-        'X-Title': 'Medical AI App'
+        'x-goog-api-key': process.env.GOOGLE_GEMINI_API_KEY || ''
       },
       body: JSON.stringify({
-        model: 'google/gemini-flash-1.5',
-        messages: messages,
-        max_tokens: 2000,
-        temperature: 0.7
+        contents: messages.map(msg => ({
+          role: msg.role,
+          parts: [{ text: msg.content }]
+        })),
+        generationConfig: {
+          temperature: 0.3,
+          topK: 32,
+          topP: 1,
+          maxOutputTokens: 2048,
+        }
       })
     })
 
@@ -22,9 +26,9 @@ async function callOpenRouterAPI(messages: any[]) {
     }
 
     const data = await response.json()
-    return data.choices[0].message.content
+    return data.candidates[0].content.parts[0].text
   } catch (error) {
-    console.error('Error calling OpenRouter API:', error)
+    console.error('Error calling Gemini API:', error)
     throw error
   }
 }
@@ -68,11 +72,11 @@ export async function analyzeHealthData(request: HealthAnalysisRequest): Promise
   } catch (error) {
     console.error('خطأ في تحليل البيانات الصحية:', error)
     // إرجاع تحليل بديل في حالة الخطأ
-    return generateFallbackAnalysis(request.profile, request.healthMetrics, request.medicalHistory)
+    return generateLocalAnalysis(request.profile, request.healthMetrics, request.medicalHistory, analyzePatientProfile(request.profile), analyzeMedicalHistory(request.medicalHistory), analyzeHealthMetrics(request.healthMetrics))
   }
 }
 
-// دالة لإنشاء تحليل محلي
+// دوال مساعدة لإنشاء التحليل
 function generateLocalAnalysis(profile: any, healthMetrics: any[], medicalHistory: any[], patientAnalysis: any, medicalHistoryAnalysis: any, metricsAnalysis: any): HealthAnalysisResponse {
   const summary = generateSummary(profile, healthMetrics, medicalHistory, patientAnalysis, medicalHistoryAnalysis, metricsAnalysis)
   const recommendations = generateRecommendations(profile, healthMetrics, medicalHistory, patientAnalysis, medicalHistoryAnalysis, metricsAnalysis)
@@ -89,32 +93,7 @@ function generateLocalAnalysis(profile: any, healthMetrics: any[], medicalHistor
   }
 }
 
-// دالة لإنشاء تحليل بديل في حالة الخطأ
-function generateFallbackAnalysis(profile: any, healthMetrics: any[], medicalHistory: any[]): HealthAnalysisResponse {
-  return {
-    summary: `بناءً على بيانات المريض، العمر: ${profile?.age || 'غير محدد'} سنة، الجنس: ${profile?.gender || 'غير محدد'}، والأمراض المزمنة: ${profile?.chronic_diseases || 'لا توجد'}، يبدو أن الحالة الصحية ${profile?.is_smoker ? 'تحتاج مراقبة خاصة' : 'جيدة نسبياً'}.`,
-    recommendations: [
-      'مراجعة الطبيب بشكل دوري',
-      'إجراء فحوصات دورية',
-      'اتباع نظام غذائي صحي',
-      'ممارسة الرياضة بانتظام'
-    ],
-    riskFactors: profile?.is_smoker ? ['التدخين'] : [],
-    lifestyleTips: [
-      'الحفاظ على وزن صحي',
-      'النوم 7-8 ساعات يومياً',
-      'شرب الماء بكميات كافية',
-      'تجنب التوتر والإجهاد'
-    ],
-    nextSteps: [
-      'حجز موعد مع الطبيب',
-      'إجراء فحوصات دورية',
-      'متابعة المؤشرات الصحية'
-    ]
-  }
-}
-
-// دوال مساعدة لإنشاء التحليل
+// Rest of your existing functions...
 function generateSummary(profile: any, healthMetrics: any[], medicalHistory: any[], patientAnalysis: any, medicalHistoryAnalysis: any, metricsAnalysis: any): string {
   const age = profile?.age || 'غير محدد'
   const gender = profile?.gender || 'غير محدد'
@@ -344,4 +323,4 @@ export async function generateHealthReport(profile: any, healthMetrics: any[], m
       gender: profile?.gender
     }
   }
-} 
+}
