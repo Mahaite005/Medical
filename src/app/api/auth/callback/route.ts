@@ -1,56 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// تكوين شامل لضمان العمل في بيئة serverless
+// تكوين صارم للـ API route
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
 /**
- * Route للتعامل مع callback من Supabase Auth
- * يدعم تسجيل الدخول وإعادة تعيين كلمة المرور
+ * Auth callback route - completely static approach
  */
 export async function GET(request: NextRequest) {
+  const baseUrl = 'https://medicalapp-teal.vercel.app'
+  
   try {
-    // استخراج المعاملات مباشرة بدون استخدام searchParams.entries()
-    const { searchParams } = request.nextUrl
+    // استخراج المعاملات بطريقة آمنة
+    const url = request.nextUrl
+    const code = url.searchParams.get('code')
+    const type = url.searchParams.get('type')
+    const accessToken = url.searchParams.get('access_token')
+    const refreshToken = url.searchParams.get('refresh_token')
     
-    const code = searchParams.get('code')
-    const type = searchParams.get('type') 
-    const accessToken = searchParams.get('access_token')
-    const refreshToken = searchParams.get('refresh_token')
+    // Build redirect URL
+    let redirectTo = baseUrl + '/'
     
-    // URL الأساسي للتطبيق
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'
-    
-    // في حالة إعادة تعيين كلمة المرور
     if (type === 'recovery' && (code || accessToken)) {
-      const dashboardUrl = new URL('/', baseUrl)
-      dashboardUrl.searchParams.set('reset_password', 'true')
+      // Password reset flow
+      const params = new URLSearchParams()
+      params.set('reset_password', 'true')
       
-      if (accessToken) {
-        dashboardUrl.searchParams.set('access_token', accessToken)
-      }
-      if (refreshToken) {
-        dashboardUrl.searchParams.set('refresh_token', refreshToken)
-      }
-      if (code) {
-        dashboardUrl.searchParams.set('code', code)
-      }
+      if (accessToken) params.set('access_token', accessToken)
+      if (refreshToken) params.set('refresh_token', refreshToken)
+      if (code) params.set('code', code)
       
-      return NextResponse.redirect(dashboardUrl.toString())
+      redirectTo = baseUrl + '/?' + params.toString()
     }
     
-    // في حالة تسجيل الدخول العادي
-    if (code && !type) {
-      return NextResponse.redirect(new URL('/', baseUrl))
-    }
+    return NextResponse.redirect(redirectTo)
     
-    // إعادة توجيه افتراضية للصفحة الرئيسية
-    return NextResponse.redirect(new URL('/', baseUrl))
-    
-  } catch (error) {
-    // في حالة حدوث خطأ، العودة للصفحة الرئيسية
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://medicalapp-teal.vercel.app'
-    return NextResponse.redirect(new URL('/', baseUrl))
+  } catch {
+    // Safe fallback
+    return NextResponse.redirect(baseUrl + '/')
   }
 }
