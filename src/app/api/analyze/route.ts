@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Force dynamic server rendering for this route
+export const dynamic = 'force-dynamic'
+
 // Rate limiting store (in production, use Redis)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
 

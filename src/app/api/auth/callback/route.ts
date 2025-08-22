@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Force dynamic server rendering for this route
+export const dynamic = 'force-dynamic'
+
 /**
  * هذه النقطة النهائية تعمل كوسيط لعملية إعادة تعيين كلمة المرور
  * تستقبل الطلب من Supabase وتعيد توجيهه إلى صفحة إعادة تعيين كلمة المرور مع الحفاظ على الرموز

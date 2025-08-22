@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStorageUsage, STORAGE_CONFIG } from '@/lib/storageConfig'
 
+// Force dynamic server rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // Get storage usage
