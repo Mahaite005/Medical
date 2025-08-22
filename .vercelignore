@@ -1,4 +1,10 @@
-# Force rebuild by clearing cache
-.next/
-.vercel/
-node_modules/
+med_mobile/
+flutter_mobile/
+keystore/
+how --oneline e4737bb
+*.log
+.env.local
+.DS_Store
+node_modules
+.next
+out
