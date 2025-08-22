@@ -75,11 +75,11 @@ export async function POST(request: NextRequest) {
       // Log request details for debugging
       console.log('Request origin:', request.headers.get('origin'));
       console.log('Request referer:', request.headers.get('referer'));
-      console.log('Request IP:', request.ip || request.headers.get('x-forwarded-for'));
+      console.log('Request IP:', request.headers.get('x-forwarded-for'));
     }
     
     // Rate limiting
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
+    const ip = request.headers.get('x-forwarded-for') || 'unknown'
     if (!checkRateLimit(ip)) {
       console.log('Rate limit exceeded for IP:', ip);
       return NextResponse.json(
