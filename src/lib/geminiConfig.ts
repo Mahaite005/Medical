@@ -2,8 +2,8 @@
 export const GEMINI_CONFIG = {
   // حدود الاستخدام
   RATE_LIMIT: {
-    REQUESTS_PER_MINUTE: 10,
-    REQUESTS_PER_HOUR: 100,
+    REQUESTS_PER_MINUTE: 60,
+    REQUESTS_PER_HOUR: 3600,
     MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB للصور
     MAX_PDF_SIZE: 5 * 1024 * 1024, // 5MB لملفات PDF
   },
@@ -28,8 +28,8 @@ export const GEMINI_CONFIG = {
 
   // التكلفة التقريبية (بالدولار)
   COST_ESTIMATE: {
-    PER_REQUEST: 0.001, // تقريباً $0.001 لكل طلب
-    PER_MONTH_1000_REQUESTS: 1.00, // تقريباً $1 لـ 1000 طلب
+    PER_REQUEST: 0.0005, // تقريباً $0.0005 لكل طلب
+    PER_MONTH_1000_REQUESTS: 0.50, // تقريباً $0.50 لـ 1000 طلب
   },
 
   // رسائل الخطأ
@@ -71,4 +71,4 @@ export function isValidFileSize(fileSize: number, fileType: string): boolean {
 export async function convertPdfToImages(file: File): Promise<string[]> {
   // سيتم تنفيذ هذه الدالة في الخطوة التالية
   return []
-} 
+}

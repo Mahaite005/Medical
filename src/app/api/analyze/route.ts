@@ -47,12 +47,15 @@ function validateCSRFToken(request: NextRequest): boolean {
     'localhost',
     '127.0.0.1',
     'medicalapp-teal.vercel.app',
+    'medical-sage-nine.vercel.app',
+    'medical-git-website-updates-mahaite005s-projects.vercel.app',
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/https?:\/\//, '') || ''
   ].filter(Boolean)
   
   // التحقق من الـ origin
   if (origin) {
-    const isAllowed = allowedDomains.some(domain => origin.includes(domain))
+    const isAllowed = allowedDomains.some(domain => origin.includes(domain)) || 
+                     origin.includes('vercel.app') // للسماح بجميع subdomains على Vercel
     if (!isAllowed) {
       if (process.env.NODE_ENV === 'development') {
         console.log('CSRF validation failed - Origin not allowed:', origin)
@@ -75,11 +78,11 @@ export async function POST(request: NextRequest) {
       // Log request details for debugging
       console.log('Request origin:', request.headers.get('origin'));
       console.log('Request referer:', request.headers.get('referer'));
-      console.log('Request IP:', request.ip || request.headers.get('x-forwarded-for'));
+      console.log('Request IP:', request.headers.get('x-forwarded-for'));
     }
     
     // Rate limiting
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
+    const ip = request.headers.get('x-forwarded-for') || 'unknown'
     if (!checkRateLimit(ip)) {
       console.log('Rate limit exceeded for IP:', ip);
       return NextResponse.json(

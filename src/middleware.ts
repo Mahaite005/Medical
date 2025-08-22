@@ -1,49 +1,41 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  
-  try {
-    const supabase = createMiddlewareClient({ req, res })
-    
-    // Get session
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    // Add security headers
-    res.headers.set('X-Frame-Options', 'DENY')
-    res.headers.set('X-Content-Type-Options', 'nosniff')
-    res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-    res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-    
-    // Add CSP header for better security (محسّن)
-    res.headers.set('Content-Security-Policy', 
-      "default-src 'self'; " +
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live; " +
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-      "img-src 'self' data: https: blob: https://*.supabase.co; " +
-      "font-src 'self' https://fonts.gstatic.com; " +
-      "connect-src 'self' https://*.supabase.co https://generativelanguage.googleapis.com https://vercel.live; " +
-      "frame-ancestors 'none'; " +
-      "base-uri 'self'; " +
-      "form-action 'self';"
-    )
-    
-    // Protect API routes
-    if (req.nextUrl.pathname.startsWith('/api/')) {
-      // Add rate limiting headers
-      res.headers.set('X-RateLimit-Limit', '10')
-      res.headers.set('X-RateLimit-Window', '60')
-    }
-  } catch (error) {
-    console.error('Middleware error:', error)
-    // Continue with response even if Supabase fails
-  }
-  
-  return res
-}
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
-} 
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: any) {
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
+
+  await supabase.auth.getSession()
+
+  return response
+}

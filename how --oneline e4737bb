@@ -1,0 +1,10 @@
+[33m19f2e94[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mwebsite-updates[m[33m, [m[1;31morigin/website-updates[m[33m)[m تحديث API الجديد: AIzaSyB0-mLWhjL7UJGhpU2wqGp8i-H0c4MnDPA
+[33m5177cce[m[33m ([m[1;32mmain[m[33m)[m Major update: Enhanced auth callback with Arabic comments, improved error handling, and comprehensive project updates
+[33m2d68370[m Fix auth callback dynamic server usage error - use URL constructor instead of request.nextUrl
+[33mc967493[m Fix Vercel deployment error by updating vercel.json schema
+[33m77555bd[m Fix JSON
+[33m5b38ad4[m New Errors Fix
+[33m79ac46e[m FORCE DEPLOY: Fix dynamic server usage error in production
+[33m5750929[m 🔧 حل نهائي لمشكلة Dynamic server usage - تحديث auth callback route - تحسين vercel.json و next.config.js - إصلاح شامل للـ deployment errors
+[33mfb34146[m Fix dynamic server usage error in auth callback route
+[33md2a1f4d[m 🔧 إصلاح جميع أخطاء البناء والتحديثات النهائية - إضافة dynamic export لجميع API routes - إصلاح metadata configuration - تحسين الأمان والأداء - الموقع جاهز للإنتاج

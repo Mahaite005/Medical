@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
-import { Calendar, FileText, Eye, Download } from 'lucide-react'
+import { Calendar, FileText, Eye, Download, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 
 interface TestHistoryProps {
@@ -23,6 +23,7 @@ export default function TestHistory({ user }: TestHistoryProps) {
   const [tests, setTests] = useState<MedicalTest[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedTest, setSelectedTest] = useState<MedicalTest | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchTests = useCallback(async () => {
     try {
@@ -75,6 +76,54 @@ export default function TestHistory({ user }: TestHistoryProps) {
     return formatted
   }
 
+  // Function to delete a medical test
+  const deleteTest = async (test: MedicalTest) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الفحص الطبي؟')) {
+      return
+    }
+
+    try {
+      setDeleting(true)
+
+      // Extract the file path from the URL
+      const urlParts = test.image_url.split('/')
+      const filePath = urlParts[urlParts.length - 1]
+
+      // Delete the image from storage
+      const { error: storageError } = await supabase
+        .storage
+        .from('medical-images')
+        .remove([`${user.id}/${filePath}`])
+
+      if (storageError) {
+        throw storageError
+      }
+
+      // Delete the record from the database
+      const { error: dbError } = await supabase
+        .from('medical_tests')
+        .delete()
+        .eq('id', test.id)
+        .eq('user_id', user.id)
+
+      if (dbError) {
+        throw dbError
+      }
+
+      // Update the local state
+      setTests(tests.filter(t => t.id !== test.id))
+      if (selectedTest?.id === test.id) {
+        setSelectedTest(null)
+      }
+
+    } catch (error) {
+      console.error('Error deleting test:', error)
+      alert('حدث خطأ أثناء حذف الفحص الطبي')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="text-center py-8">
@@ -113,11 +162,13 @@ export default function TestHistory({ user }: TestHistoryProps) {
           {tests.map((test) => (
             <div
               key={test.id}
-              className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors cursor-pointer"
-              onClick={() => setSelectedTest(test)}
+              className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors"
             >
               <div className="flex items-center justify-between">
-                <div className="flex-1">
+                <div 
+                  className="flex-1 cursor-pointer"
+                  onClick={() => setSelectedTest(test)}
+                >
                   <div className="flex items-center gap-2 mb-2">
                     <Calendar className="w-4 h-4 text-gray-400" />
                     <span className="text-sm text-gray-600">
@@ -128,9 +179,21 @@ export default function TestHistory({ user }: TestHistoryProps) {
                     {test.analysis_result.substring(0, 100)}...
                   </p>
                 </div>
-                <button className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg">
-                  <Eye className="w-5 h-5" />
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg"
+                    onClick={() => setSelectedTest(test)}
+                  >
+                    <Eye className="w-5 h-5" />
+                  </button>
+                  <button 
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                    onClick={() => deleteTest(test)}
+                    disabled={deleting}
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -197,6 +260,14 @@ export default function TestHistory({ user }: TestHistoryProps) {
                   تحميل الصورة
                 </button>
                 <button
+                  onClick={() => deleteTest(selectedTest)}
+                  className="flex items-center justify-center gap-2 py-3 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                  disabled={deleting}
+                >
+                  <Trash2 className="w-5 h-5" />
+                  حذف
+                </button>
+                <button
                   onClick={() => setSelectedTest(null)}
                   className="flex-1 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                 >
@@ -209,4 +280,4 @@ export default function TestHistory({ user }: TestHistoryProps) {
       )}
     </div>
   )
-} 
+}
